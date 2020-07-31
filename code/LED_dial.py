@@ -95,7 +95,7 @@ while True:
 
    if (hall_mode == 0):
       time_out_exit +=1
-      if (time_out_exit > 50):
+      if (time_out_exit > 500):
          print('No signal. Exiting program.')
          GPIO.cleanup()
          sys.exit()
