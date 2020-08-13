@@ -4,17 +4,15 @@ EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
-Title "Makaniu Simple BMS"
-Date ""
-Rev "000x4"
+Title "Makaniu BMS"
+Date "2020-08-13"
+Rev "0"
 Comp "Open Ocean Initiative"
-Comment1 "Drawn By:Lui Kawasumi"
+Comment1 "Drawn By: Lui Kawasumi"
 Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-Wire Wire Line
-	9500 5250 9200 5250
 Wire Wire Line
 	4900 2000 4900 2050
 Connection ~ 4900 2000
@@ -1678,8 +1676,6 @@ Text GLabel 9400 5550 0    50   Output ~ 0
 IMU_INT
 Text GLabel 9400 5450 0    50   Output ~ 0
 GPS_INT
-Text GLabel 9200 5250 0    50   Input ~ 0
-~TS_EOC~
 Text GLabel 10350 5250 2    50   Output ~ 0
 ~INT~
 Text GLabel 10100 5350 2    50   Input ~ 0
@@ -2074,7 +2070,7 @@ L Device:C C24
 U 1 1 5FA98536
 P 6650 1500
 F 0 "C24" V 6700 1300 50  0000 R CNN
-F 1 "1.75uF" V 6600 1300 50  0000 R CNN
+F 1 "0.15uF" V 6600 1300 50  0000 R CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 6688 1350 50  0001 C CNN
 F 3 "~" H 6650 1500 50  0001 C CNN
 	1    6650 1500
@@ -2169,4 +2165,8 @@ F 3 "" H 7250 1350 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Connection ~ 7250 1350
+Wire Wire Line
+	9500 5250 9200 5250
+Text GLabel 9200 5250 0    50   Input ~ 0
+~TS_EOC~
 $EndSCHEMATC
