@@ -617,7 +617,7 @@ $EndComp
 Wire Wire Line
 	4900 1800 3750 1800
 $Comp
-L Custom:BQ77915 U3
+L Maka_BMS-rescue:BQ77915-Custom U3
 U 1 1 5F22EDFB
 P 3150 1200
 F 0 "U3" H 3150 1265 50  0000 C CNN
@@ -1203,7 +1203,7 @@ Wire Wire Line
 Text GLabel 1800 5500 0    50   Input ~ 0
 ~DELAYED_OFF~
 $Comp
-L Custom:AP63205 U1
+L Maka_BMS-rescue:AP63205-Custom U1
 U 1 1 5FD494D7
 P 2250 5200
 F 0 "U1" H 2250 5315 50  0000 C CNN
@@ -1662,7 +1662,7 @@ $EndComp
 Wire Wire Line
 	8450 1950 8850 1950
 $Comp
-L Custom:T1M-10-F-SH-L-K J8
+L Maka_BMS-rescue:T1M-10-F-SH-L-K-Custom J8
 U 1 1 5F28B09D
 P 6700 5650
 F 0 "J8" H 6593 4883 50  0000 C CNN
@@ -1839,7 +1839,7 @@ F 4 "BAS5202VH6327XTSA1CT-ND" H 1150 4900 50  0001 C CNN "Digikey"
 $EndComp
 NoConn ~ 10000 5550
 $Comp
-L Custom:TPS70933DBV U2
+L Maka_BMS-rescue:TPS70933DBV-Custom U2
 U 1 1 5FAD69CC
 P 2250 6050
 F 0 "U2" H 2250 6150 50  0000 C CNN
@@ -2091,7 +2091,7 @@ F 3 "" H 5600 850 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Custom:+CHARGE #PWR0104
+L Maka_BMS-rescue:+CHARGE-Custom #PWR0104
 U 1 1 5FA19A89
 P 10150 2200
 F 0 "#PWR0104" H 10150 2050 50  0001 C CNN
@@ -2102,7 +2102,7 @@ F 3 "" H 10150 2200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Custom:+CHARGE #PWR0105
+L Maka_BMS-rescue:+CHARGE-Custom #PWR0105
 U 1 1 5FA1A2D1
 P 750 4700
 F 0 "#PWR0105" H 750 4550 50  0001 C CNN
@@ -2252,4 +2252,8 @@ Wire Wire Line
 	9500 5250 9200 5250
 Text GLabel 9200 5250 0    50   Input ~ 0
 ~TS_EOC~
+Text Notes 2200 4850 0    79   ~ 0
+WRONG!, make C13 a 100nF\n
+Text Notes 9750 1850 0    79   ~ 0
+C22 wrongly routed
 $EndSCHEMATC
