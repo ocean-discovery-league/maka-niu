@@ -1,8 +1,9 @@
-from time import sleep 
-import RPi.GPIO as GPIO 
+#!/usr/bin/python
+from time import sleep
+import RPi.GPIO as GPIO
 import array as arr
 import sys
-
+from subprocess import call
 
 
 
@@ -22,11 +23,13 @@ GPIO.setup(9, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.setup(25, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.setup(11, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(18, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+
 #establish hall dial variables
 hall_button_active = 0
 hall_button_last = 0
-hall_active = arr.array('i', [0,0,0,0,0])
-hall_confidence = arr.array('i', [0,0,0,0,0])
+hall_active = arr.array('i', [0,0,0,0,0,0])
+hall_confidence = arr.array('i', [0,0,0,0,0,0])
 hall_most_confident_value =0
 hall_mode = 0
 hall_mode_last = 0
@@ -37,20 +40,22 @@ end_recording_mode_changed_flag = 0
 
 ################################################################# MAIN FOREVER LOOP
 print('Welcome. Intitiating LED Dial test program. Enjoy')
+sys.stdout.flush()
 while True:
    sleep(0.01)
 
 # collect raw hall states, use 1 - GPIO, because they are pull up, active low.
-   hall_button_last = hall_button_active
+   hall_button_last = hall_button_active #button hall
    hall_button_active = 1-GPIO.input(8)
-   hall_active[0] = 1-GPIO.input(11)
+   hall_active[0] = 1-GPIO.input(11) #mode halls
    hall_active[1] = 1-GPIO.input(25)
    hall_active[2] = 1-GPIO.input(9)
    hall_active[3] = 1-GPIO.input(10)
    hall_active[4] = 1-GPIO.input(24)
+   hall_active[5] = 1-GPIO.input(18) #mode hall for power
 
 # determine overall overtime confidence in each hall sensor being active
-   for x in range(5):
+   for x in range(6):
       if(hall_active[x] and hall_confidence[x] < 100):
          hall_confidence[x] += 1
       elif (hall_active[x] == 0 and hall_confidence[x] > 0):
@@ -59,7 +64,7 @@ while True:
 # pick the mode based on highest hall confidence with score > 5 out of 10
    hall_mode_last = hall_mode
    hall_mode = 0
-   for x in range(5):
+   for x in range(6):
       if (hall_confidence[x] >= 50):
          hall_mode = 1 + x
    if (recording and hall_mode != hall_mode_last):
@@ -70,7 +75,8 @@ while True:
 ####################################################################### MODES
 #No magnet detected, unit is off, no LEDs
    if (hall_mode == 0 and hall_mode != hall_mode_last):
-      print('No hall detected, Unit is Off')
+      print('No hall detected, doing nothing')
+      sys.stdout.flush()
       green.stop()
       red.stop()
 
@@ -182,7 +188,7 @@ while True:
          else:
             green_duty_cycle = green_duty_cycle * 0.95
 
-#Magnet at Mission 1, flash 
+#Magnet at Mission 1, flash red then flash green once
    if (hall_mode == 4 and hall_mode != hall_mode_last):
       print('Mission 1 activated')
       green.stop()
@@ -203,7 +209,7 @@ while True:
 
 
 
-#Magnet at Mission 2 , flash  yellow twice.
+#Magnet at Mission 2 , flash  red then green twice.
    if (hall_mode == 5 and hall_mode != hall_mode_last):
       print('Mission 2 activated')
       green.stop()
@@ -222,7 +228,19 @@ while True:
       #sleep(0.25)
       #red.stop()
 
-
+#Magnet at Power Off Hall,  flash red long, medium, short.
+   if (hall_mode == 6 and hall_mode != hall_mode_last):
+      print('Powerdown activated')
+      green.stop()
+      red.stop()
+      for x in range (3): #3 fast flashes and start shutdown
+         sleep(0.16)
+         red.start(100)
+         sleep(0.16)
+         red.stop()
+      GPIO.cleanup()
+      call("sudo shutdown -h now", shell=True)
+      sys.exit()
    #if (hall_mode == 0):
     #  time_out_exit +=1
      # if (time_out_exit > 50):
