@@ -73,9 +73,9 @@ while True:
 
 
 ####################################################################### MODES
-#No magnet detected, unit is off, no LEDs
+#No magnet detected, dial is probably between nodes
    if (hall_mode == 0 and hall_mode != hall_mode_last):
-      print('No hall detected, doing nothing')
+      print('No hall detected, doing nothing.')
       sys.stdout.flush()
       green.stop()
       red.stop()
@@ -83,154 +83,147 @@ while True:
 # Magnet at Wifi Mode,  solid green
    if (hall_mode == 1):
       if (hall_mode != hall_mode_last):
-         print('Wifi Mode actvated. Solid green led')
-         red.stop()
-         green.start(100)
+         print('Wifi Mode activated. Signified with 3 fast green flashes, repeated 3 times.')
+         sys.stdout.flush()
+	 #ADD CODE OR FLAG TO ENABLE WIFI
+	 red.stop()
+	 green.stop()
+         green.ChangeFrequency(100)
+         for a in range (3):
+            for b in range (3):
+	       green.start(100)
+               sleep(0.1)
+     	       green.stop()
+               sleep(0.1)
+            sleep(0.5)
 
-#Magnet at Video Mode, soft pulsing green. When button pressed, pulse red 3x, then go dark and record video. Press again, blink red 2X and end video
+
+#Magnet at Video Mode. When Dial turns to vides, green light on for 3 secondsn. When button pressed, flash red twice, then go dark and record video. Press again, pulse red 1x  and end video
    if (hall_mode == 2):
       if (hall_mode != hall_mode_last):
-         print('Video Mode activated, press button to begin recording')
-         green_duty_cycle = 5
+         print('Video Mode activated. Signified with a single long green flash. Press button to begin recording.')
+         sys.stdout.flush()
+	 green.stop()
          red.stop()
-
-      if (recording == 0):
-         green.start(5+green_duty_cycle)
-         if (green_duty_cycle <1):
-            green_pulse_up = 1
-         elif (green_duty_cycle >90):
-            green_pulse_up = 0
-         if (green_pulse_up):
-            green_duty_cycle = green_duty_cycle * 1.05
-         else:
-            green_duty_cycle = green_duty_cycle * 0.95
+	 sleep(0.25)
+         green.ChangeFrequency(100)
+         green.start(100)
+	 sleep(3.0)
+         green.stop()
 
       if (hall_button_active != hall_button_last):
          if (hall_button_active and recording == 0):
+            print('Start record.')
+            sys.stdout.flush()
+	    recording = 1
             green.stop()
-            led_duty_cycle = 1
-            pulse_up =1
-            pulse_count =0
-
-            while (pulse_count < 3):
-               sleep(0.01)
-               red.start(led_duty_cycle)
-     	       if (led_duty_cycle <3 and pulse_up == 0):
-                  pulse_up = 1
-                  pulse_count = pulse_count +1
-               elif (led_duty_cycle >80 and pulse_up):
-        	  pulse_up = 0
-               if (pulse_up):
-                  led_duty_cycle = led_duty_cycle * 1.1
-               else:
-                  led_duty_cycle = led_duty_cycle * 0.9
-
-            red.stop()
-            #BEGIN RECORDING
-            print('Starting video now')
-            recording = 1
+	    red.ChangeFrequency(100)
+	    for a in range (2):
+		red.start(100)
+	    	sleep(0.1)
+	    	red.stop()
+	    	sleep(0.1)
+           #CODE BEGIN RECORDING
 
          elif (hall_button_active and recording):
-            red.ChangeFrequency(3)
-            red.start(50)
-	    sleep(1)
-            red.stop()
-            red.ChangeFrequency(100)
-            #END RECORDING
-            print('Ending video')
+            print('End record')
+            sys.stdout.flush()
             recording = 0
-            sleep(0.5)
-            green.ChangeFrequency(100)
-            green.start(100)
+            #CODE FOR END RECORDING
+            green.stop()
+	    red.ChangeFrequency(100)
+	    for a in range (1):
+		red.start(100)
+	    	sleep(0.1)
+	    	red.stop()
+	    	sleep(0.1)
 
-      if (end_recording_mode_changed_flag):
-         red.ChangeFrequency(3)
-         red.start(50)
-         sleep(1)
-         red.stop()
-         red.ChangeFrequency(100)
-         green.stop()
-	 #END RECORDING
-         print('Ending video')
-         recording = 0
-         sleep(0.5)
+   if (end_recording_mode_changed_flag):
+        print('End record')
+        sys.stdout.flush()
+        recording = 0
+        #CODE FOR END RECORDING
+        green.stop()
+        red.ChangeFrequency(100)
+        for a in range (1):
+           red.start(100)
+	   sleep(0.1)
+	   red.stop()
+	   sleep(0.1)
 
-
-
-
-#Magnet at Picture Mode, pulsing yellow, flash red when button pressed (dont stay on) and capture photo. If button continued to press, take photos as long as button is pressed.
+#Magnet at Picture Mode. Siginified with 5 green pulses. Flash red when button pressed (dont stay on) and capture photo. If button continued to press, take photos as long as button is pressed.
    if (hall_mode == 3):
       if (hall_mode != hall_mode_last):
-         print('Picture Mode activated, pulsing yellow. Press button to capture image, hold for burst')
+         print('Picture Mode activated. Signified with 5 green faded pulses. Press button to capture image, hold for burst.')
+         sys.stdout.flush()
+         pulse_up =1
+         pulse_count =0
+	 red.stop()
+	 green.ChangeFrequency(100)
+         led_duty_cycle = 5
+         while (pulse_count < 5):
+            sleep(0.005)
+            green.start(led_duty_cycle)
+     	    if (led_duty_cycle <3 and pulse_up == 0):
+               pulse_up = 1
+               pulse_count = pulse_count +1
+	       sleep(0.1)
+            elif (led_duty_cycle >80 and pulse_up):
+               pulse_up = 0
+            if (pulse_up):
+               led_duty_cycle = led_duty_cycle * 1.1
+            else:
+               led_duty_cycle = led_duty_cycle * 0.9
+	 green.stop()
 
       if (hall_button_active):
-         green_duty_cycle = 3
+         green.stop()
          if (hall_button_active != hall_button_last):
-            #flash red
-            green.stop()
             red.start(100)
-            sleep(0.25)
+            sleep(0.2)
             red.stop()
-            #CAPTURE PHOTO
-            sleep(0.5)
-         else :
-            #CAPTURE BURST PHOTO
+            #CODE TO CAPTURE PHOTO
             sleep(0.25)
-      else :
-         green.start(5 + green_duty_cycle)
-         red.start(5 + green_duty_cycle)
-         if (green_duty_cycle <1):
-            green_pulse_up = 1
-         elif (green_duty_cycle >50):
-            green_pulse_up = 0
-         if (green_pulse_up):
-            green_duty_cycle = green_duty_cycle * 1.05
-         else:
-            green_duty_cycle = green_duty_cycle * 0.95
+         else :
+            #CODE TO CONTINUE TO CAPTURE BURST PHOTO
+            sleep(0.25)
 
 #Magnet at Mission 1, flash red then flash green once
    if (hall_mode == 4 and hall_mode != hall_mode_last):
-      print('Mission 1 activated')
+      print('Mission 1 activated. Signified with a green long flash, repeated three times.')
+      sys.stdout.flush()
       green.stop()
       red.stop()
       sleep(0.5)
-      red.start(100)
-      sleep(0.25)
-      red.stop()
-      for x in range (1):
-         sleep(0.5)
+      for a in range (3):
          green.start(100)
-         sleep(0.75)
+         sleep(0.7)
          green.stop()
-      #sleep(0.5)
-      #red.start(100)
-      #sleep(0.25)
-      #red.stop()
-
-
+         sleep(0.4)
+      #CODE OF MODE 1
 
 #Magnet at Mission 2 , flash  red then green twice.
    if (hall_mode == 5 and hall_mode != hall_mode_last):
-      print('Mission 2 activated')
+      print('Mission 2 activated. Signified with green a short then a long flash, repeated three times. ')
+      sys.stdout.flush()
       green.stop()
       red.stop()
       sleep(0.5)
-      red.start(100)
-      sleep(0.25)
-      red.stop()
-      for x in range (2):
-         sleep(0.5)
+      for a in range (3):
          green.start(100)
-         sleep(0.75)
+         sleep(0.25)
          green.stop()
-      #sleep(0.5)
-      #red.start(100)
-      #sleep(0.25)
-      #red.stop()
+         sleep(0.2)
+         green.start(100)
+         sleep(0.7)
+         green.stop()
+         sleep(0.4)
+
 
 #Magnet at Power Off Hall,  flash red long, medium, short.
    if (hall_mode == 6 and hall_mode != hall_mode_last):
-      print('Powerdown activated')
+      print('Powerdown activated. Signfied by ... not sure yet')
+      sys.stdout.flush()
       green.stop()
       red.stop()
       for x in range (3): #3 fast flashes and start shutdown
