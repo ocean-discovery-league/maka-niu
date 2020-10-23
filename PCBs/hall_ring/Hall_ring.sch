@@ -14,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L Custom:DRV5053_LPG U3
+L Hall_ring-rescue:DRV5053_LPG-Custom U3
 U 1 1 5F033524
 P 3600 1350
 F 0 "U3" H 3633 1475 50  0000 C CNN
@@ -55,7 +55,7 @@ F 3 "" H 4250 800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Custom:DRV5053_LPG U4
+L Hall_ring-rescue:DRV5053_LPG-Custom U4
 U 1 1 5F035BFA
 P 4950 1350
 F 0 "U4" H 4983 1475 50  0000 C CNN
@@ -126,7 +126,7 @@ F 3 "" H 8300 1100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Custom:DRV5053_LPG U6
+L Hall_ring-rescue:DRV5053_LPG-Custom U6
 U 1 1 5F0383D1
 P 7650 1350
 F 0 "U6" H 7683 1475 50  0000 C CNN
@@ -167,7 +167,7 @@ F 3 "" H 6950 1100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Custom:DRV5053_LPG U5
+L Hall_ring-rescue:DRV5053_LPG-Custom U5
 U 1 1 5F0370E1
 P 6300 1350
 F 0 "U5" H 6333 1475 50  0000 C CNN
@@ -303,7 +303,7 @@ Wire Wire Line
 Wire Wire Line
 	1500 3600 1600 3600
 $Comp
-L Custom:DRV5053_LPG U7
+L Hall_ring-rescue:DRV5053_LPG-Custom U7
 U 1 1 5F07B9E2
 P 1200 4000
 F 0 "U7" H 1233 4125 50  0000 C CNN
@@ -410,7 +410,7 @@ F 3 "" H 1550 1100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Custom:DRV5053_LPG U1
+L Hall_ring-rescue:DRV5053_LPG-Custom U1
 U 1 1 5EF55C80
 P 900 1350
 F 0 "U1" H 933 1475 50  0000 C CNN
@@ -468,7 +468,7 @@ F 3 "" H 2900 1100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Custom:DRV5053_LPG U2
+L Hall_ring-rescue:DRV5053_LPG-Custom U2
 U 1 1 5F065A9F
 P 2250 1350
 F 0 "U2" H 2283 1475 50  0000 C CNN
@@ -539,7 +539,7 @@ Wire Wire Line
 Wire Wire Line
 	9550 2700 9250 2700
 $Comp
-L Custom:LED_RG D1
+L Hall_ring-rescue:LED_RG-Custom D1
 U 1 1 5F0AA8C7
 P 6450 3150
 F 0 "D1" H 6433 3315 50  0000 C CNN
