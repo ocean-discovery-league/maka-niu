@@ -1,0 +1,3 @@
+[submodule "RPi_Cam_Web_Interface"]
+	path = RPi_Cam_Web_Interface
+	url = https://github.com/mitmedialab/RPi_Cam_Web_Interface
