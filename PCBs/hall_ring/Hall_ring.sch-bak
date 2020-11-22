@@ -320,17 +320,6 @@ Wire Wire Line
 Wire Wire Line
 	2150 3900 1500 3900
 $Comp
-L Custom:LED_RG D1
-U 1 1 5F0AA8C7
-P 6750 3150
-F 0 "D1" H 6733 3315 50  0000 C CNN
-F 1 "LED_RG" H 6733 3224 50  0000 C CNN
-F 2 "Connector_PinHeader_2.00mm:PinHeader_1x03_P2.00mm_Vertical" H 6750 3150 50  0001 C CNN
-F 3 "" H 6750 3150 50  0001 C CNN
-	1    6750 3150
-	1    0    0    -1  
-$EndComp
-$Comp
 L Device:R R1
 U 1 1 5F0AD4E7
 P 7900 3250
@@ -342,7 +331,7 @@ F 3 "~" H 7900 3250 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 Wire Wire Line
-	7150 3250 7750 3250
+	6850 3250 7750 3250
 $Comp
 L Device:R R2
 U 1 1 5F0B3E10
@@ -355,7 +344,7 @@ F 3 "~" H 7900 3650 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 Wire Wire Line
-	7150 3650 7750 3650
+	6850 3650 7750 3650
 $Comp
 L power:GND #PWR015
 U 1 1 5F0D433F
@@ -372,7 +361,7 @@ Wire Wire Line
 Wire Wire Line
 	7300 3350 7300 3450
 Wire Wire Line
-	7300 3450 7150 3450
+	7300 3450 6850 3450
 $Comp
 L Device:C C1
 U 1 1 5F06AD82
@@ -549,4 +538,15 @@ Wire Wire Line
 	9550 2800 9550 2700
 Wire Wire Line
 	9550 2700 9250 2700
+$Comp
+L Custom:LED_RG D1
+U 1 1 5F0AA8C7
+P 6450 3150
+F 0 "D1" H 6433 3315 50  0000 C CNN
+F 1 "LED_RG" H 6433 3224 50  0000 C CNN
+F 2 "Connector_PinHeader_2.00mm:PinHeader_1x03_P2.00mm_Vertical" H 6450 3150 50  0001 C CNN
+F 3 "" H 6450 3150 50  0001 C CNN
+	1    6450 3150
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC

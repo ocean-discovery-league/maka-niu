@@ -82,7 +82,7 @@ while True:
 ####################################################################### MODES
 #No magnet detected,  no indication
    if (hall_mode == 0 and hall_mode != hall_mode_last):
-      print('No hall detected, doing nothing')
+      print('No hall detected, doing nothing.')
       sys.stdout.flush()
       red.stop()
 
