@@ -7,3 +7,4 @@
 *.sch-bak
 *autosave*
 *cache*
+ignore/

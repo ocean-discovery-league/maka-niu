@@ -1,0 +1,8 @@
+Reference, Quantity, Value, Footprint, Datasheet, Digikey
+C3 C4 C5 C6 C7 C1 C2 ,7,"0.1uF","Capacitor_SMD:C_0402_1005Metric","~","1276-1043-2-ND"
+D1 ,1,"LED_RG","Connector_PinHeader_2.00mm:PinHeader_1x03_P2.00mm_Vertical","","160-1939-ND"
+J1 ,1,"Conn_02x05_Odd_Even","Connector_Hirose:Hirose_DF11-10DP-2DSA_2x05_P2.00mm_Vertical","~","H125941-ND"
+J2 ,1,"Conn_01x03_Female","Connector_JST:JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical","~","455-1705-ND"
+R1 ,1,"300","Resistor_SMD:R_0402_1005Metric","~","YAG5286TR-ND"
+R2 ,1,"200","Resistor_SMD:R_0402_1005Metric","~","311-200LRTR-ND"
+U3 U4 U6 U5 U7 U1 U2 ,7,"DRV5053_LPG","Package_TO_SOT_THT:TO-92Flat","","296-DRV5032DULPGMCT-ND"

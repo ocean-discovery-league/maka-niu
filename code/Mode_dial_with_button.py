@@ -80,7 +80,7 @@ while True:
       green.stop()
       red.stop()
 
-# Magnet at Wifi Mode,  solid green
+# Magnet at Wifi Mode
    if (hall_mode == 1):
       if (hall_mode != hall_mode_last):
          print('Wifi Mode activated. Signified with 3 fast green flashes, repeated 3 times.')
