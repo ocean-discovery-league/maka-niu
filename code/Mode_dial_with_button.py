@@ -4,18 +4,25 @@ import RPi.GPIO as GPIO
 import array as arr
 import sys
 from subprocess import call
-
+import board
+import busio
+import adafruit_drv2605
 
 
 ############################################################### SETUP
+#setup i2c for haptic feedback
+i2c = busio.I2C(board.SCL, board.SDA)
+drv = adafruit_drv2605.DRV2605(i2c)
+
 #setup LED pwms pins
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(12, GPIO.OUT)
 GPIO.setup(13, GPIO.OUT)
 red = GPIO.PWM(12, 100) #(pin, freq)
-green = GPIO.PWM(13, 100) #(pin, freq)
-green_duty_cycle = 1.0 # for fading pulse
-green_pulse_up = 1
+#green = GPIO.PWM(13, 100) #(pin, freq)
+#//green_duty_cycle = 1.0 # for fading pulse
+#//green_pulse_up = 1
+
 #setup Hall sensor pins. All pulled up, so active is when low
 GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.setup(10, GPIO.IN, pull_up_down = GPIO.PUD_UP)
@@ -67,190 +74,125 @@ while True:
    for x in range(6):
       if (hall_confidence[x] >= 50):
          hall_mode = 1 + x
-   if (recording and hall_mode != hall_mode_last):
-      hall_mode = hall_mode_last
+   if (recording and hall_mode != 2):
+      hall_mode = 2
       end_recording_mode_changed_flag = 1
 
 
 ####################################################################### MODES
-#No magnet detected, unit is off, no LEDs
+#No magnet detected,  no indication
    if (hall_mode == 0 and hall_mode != hall_mode_last):
       print('No hall detected, doing nothing')
       sys.stdout.flush()
-      green.stop()
       red.stop()
 
-# Magnet at Wifi Mode,  solid green
+# Magnet at Wifi Mode,  three red flashes. 
    if (hall_mode == 1):
       if (hall_mode != hall_mode_last):
-         print('Wifi Mode actvated. Solid green led')
-         red.stop()
-         green.start(100)
+         print('Wifi Mode actvated. three red flashes')
+         drv.sequence[0] = adafruit_drv2605.Effect(110)
+         drv.play()
+         for x in range(3):
+            sleep(0.2)
+            red.start(100)
+            sleep(0.2)
+            red.stop()
+         drv.stop()
 
-#Magnet at Video Mode, soft pulsing green. When button pressed, pulse red 3x, then go dark and record video. Press again, blink red 2X and end video
+#Magnet at Video Mode, constant red one. When button pressed, go dark and record video. Press again, end video and start led
    if (hall_mode == 2):
       if (hall_mode != hall_mode_last):
          print('Video Mode activated, press button to begin recording')
-         green_duty_cycle = 5
-         red.stop()
-
-      if (recording == 0):
-         green.start(5+green_duty_cycle)
-         if (green_duty_cycle <1):
-            green_pulse_up = 1
-         elif (green_duty_cycle >90):
-            green_pulse_up = 0
-         if (green_pulse_up):
-            green_duty_cycle = green_duty_cycle * 1.05
-         else:
-            green_duty_cycle = green_duty_cycle * 0.95
+         drv.sequence[0] = adafruit_drv2605.Effect(110);
+         drv.play()
+         red.start(100)
+         recording = 0
 
       if (hall_button_active != hall_button_last):
          if (hall_button_active and recording == 0):
-            green.stop()
-            led_duty_cycle = 1
-            pulse_up =1
-            pulse_count =0
-
-            while (pulse_count < 3):
-               sleep(0.01)
-               red.start(led_duty_cycle)
-     	       if (led_duty_cycle <3 and pulse_up == 0):
-                  pulse_up = 1
-                  pulse_count = pulse_count +1
-               elif (led_duty_cycle >80 and pulse_up):
-        	  pulse_up = 0
-               if (pulse_up):
-                  led_duty_cycle = led_duty_cycle * 1.1
-               else:
-                  led_duty_cycle = led_duty_cycle * 0.9
-
-            red.stop()
             #BEGIN RECORDING
-            print('Starting video now')
+            print('Starting video capture now')
+            drv.sequence[0] = adafruit_drv2605.Effect(17)
+            drv.play()
+            red.stop()
             recording = 1
 
          elif (hall_button_active and recording):
-            red.ChangeFrequency(3)
-            red.start(50)
-	    sleep(1)
-            red.stop()
-            red.ChangeFrequency(100)
             #END RECORDING
-            print('Ending video')
+            print('Ending video capture')
+            drv.sequence[0] = adafruit_drv2605.Effect(17)
+            drv.play()
+            red.start(100)
             recording = 0
-            sleep(0.5)
-            green.ChangeFrequency(100)
-            green.start(100)
 
       if (end_recording_mode_changed_flag):
-         red.ChangeFrequency(3)
-         red.start(50)
-         sleep(1)
-         red.stop()
-         red.ChangeFrequency(100)
-         green.stop()
-	 #END RECORDING
-         print('Ending video')
+         #END RECORDING
+         print('Left Camera mode, ending video capture')
          recording = 0
-         sleep(0.5)
+         end_recording_mode_changed_flag = 0
 
 
 
 
-#Magnet at Picture Mode, pulsing yellow, flash red when button pressed (dont stay on) and capture photo. If button continued to press, take photos as long as button is pressed.
+#Magnet at Picture Mode, 5 red flashes.
    if (hall_mode == 3):
       if (hall_mode != hall_mode_last):
-         print('Picture Mode activated, pulsing yellow. Press button to capture image, hold for burst')
-
-      if (hall_button_active):
-         green_duty_cycle = 3
-         if (hall_button_active != hall_button_last):
-            #flash red
-            green.stop()
+         print('Picture Mode activated, 5 flashes. Press button to capture image, hold for burst')
+         drv.sequence[0] = adafruit_drv2605.Effect(110)
+         drv.play()
+         for x in range (5): 
+            sleep(0.12)
             red.start(100)
-            sleep(0.25)
-            red.stop()
-            #CAPTURE PHOTO
-            sleep(0.5)
-         else :
-            #CAPTURE BURST PHOTO
-            sleep(0.25)
-      else :
-         green.start(5 + green_duty_cycle)
-         red.start(5 + green_duty_cycle)
-         if (green_duty_cycle <1):
-            green_pulse_up = 1
-         elif (green_duty_cycle >50):
-            green_pulse_up = 0
-         if (green_pulse_up):
-            green_duty_cycle = green_duty_cycle * 1.05
-         else:
-            green_duty_cycle = green_duty_cycle * 0.95
+            sleep(0.12)
+      #Flash red both for press and unpress
+      if (hall_button_active != hall_button_last):
+         drv.sequence[0] = adafruit_drv2605.Effect(17)
+         drv.play()
+         red.start(100)
+         sleep(0.125)
+         red.stop()
+      if (hall_button_active):
+         #CAPTURE PHOTO, SIGNLE OR BURST
+         sleep(0.25)
 
-#Magnet at Mission 1, flash red then flash green once
+#Magnet at Mission 1, one long red flash
    if (hall_mode == 4 and hall_mode != hall_mode_last):
       print('Mission 1 activated')
-      green.stop()
-      red.stop()
-      sleep(0.5)
+      drv.sequence[0] = adafruit_drv2605.Effect(110)
+      drv.play()
       red.start(100)
-      sleep(0.25)
+      sleep(0.75)
       red.stop()
-      for x in range (1):
-         sleep(0.5)
-         green.start(100)
-         sleep(0.75)
-         green.stop()
-      #sleep(0.5)
-      #red.start(100)
-      #sleep(0.25)
-      #red.stop()
-
-
 
 #Magnet at Mission 2 , flash  red then green twice.
    if (hall_mode == 5 and hall_mode != hall_mode_last):
       print('Mission 2 activated')
-      green.stop()
+      drv.sequence[0] = adafruit_drv2605.Effect(86)
+      drv.play()
+      red.start(100)
+      sleep(0.75)
       red.stop()
       sleep(0.5)
       red.start(100)
-      sleep(0.25)
+      sleep(0.75)
       red.stop()
-      for x in range (2):
-         sleep(0.5)
-         green.start(100)
-         sleep(0.75)
-         green.stop()
-      #sleep(0.5)
-      #red.start(100)
-      #sleep(0.25)
-      #red.stop()
+
 
 #Magnet at Power Off Hall,  flash red long, medium, short.
    if (hall_mode == 6 and hall_mode != hall_mode_last):
       print('Powerdown activated')
-      green.stop()
+      drv.sequence[0] = adafruit_drv2605.Effect(110)
+      drv.play()
       red.stop()
-      for x in range (3): #3 fast flashes and start shutdown
-         sleep(0.16)
+      for x in range (3): #3 short then long flashes
          red.start(100)
          sleep(0.16)
          red.stop()
+         sleep(0.25)
+         red.start(100)
+         sleep(0.5)
+         red.stop()
+         sleep(0.25)
       GPIO.cleanup()
       call("sudo shutdown -h now", shell=True)
       sys.exit()
-   #if (hall_mode == 0):
-    #  time_out_exit +=1
-     # if (time_out_exit > 50):
-      #   print('No signal. Exiting program.')
-       #  GPIO.cleanup()
-        # sys.exit()
-   #else:
-    # time_out_exit = 0
-     #exit program if no hall for long time
-
-
-
-
