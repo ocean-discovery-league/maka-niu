@@ -90,7 +90,7 @@ while True:
    if (hall_mode == 1):
       if (hall_mode != hall_mode_last):
          print('Wifi Mode actvated. three red flashes')
-         drv.sequence[0] = adafruit_drv2605.Effect(110)
+         drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
          drv.play()
          for x in range(3):
             sleep(0.2)
@@ -103,7 +103,7 @@ while True:
    if (hall_mode == 2):
       if (hall_mode != hall_mode_last):
          print('Video Mode activated, press button to begin recording')
-         drv.sequence[0] = adafruit_drv2605.Effect(110);
+         drv.sequence[0] = adafruit_drv2605.Effect(58) #58, 64, 95 are good choice transition buzzes
          drv.play()
          red.start(100)
          recording = 0
@@ -112,7 +112,7 @@ while True:
          if (hall_button_active and recording == 0):
             #BEGIN RECORDING
             print('Starting video capture now')
-            drv.sequence[0] = adafruit_drv2605.Effect(17)
+            drv.sequence[0] = adafruit_drv2605.Effect(1)
             drv.play()
             red.stop()
             recording = 1
@@ -120,7 +120,7 @@ while True:
          elif (hall_button_active and recording):
             #END RECORDING
             print('Ending video capture')
-            drv.sequence[0] = adafruit_drv2605.Effect(17)
+            drv.sequence[0] = adafruit_drv2605.Effect(10)
             drv.play()
             red.start(100)
             recording = 0
@@ -138,27 +138,34 @@ while True:
    if (hall_mode == 3):
       if (hall_mode != hall_mode_last):
          print('Picture Mode activated, 5 flashes. Press button to capture image, hold for burst')
-         drv.sequence[0] = adafruit_drv2605.Effect(110)
+         drv.sequence[0] = adafruit_drv2605.Effect(58)
          drv.play()
          for x in range (5): 
             sleep(0.12)
             red.start(100)
             sleep(0.12)
-      #Flash red both for press and unpress
-      if (hall_button_active != hall_button_last):
+            red.stop()
+      #Flash red both only for press
+      if (hall_button_active and hall_button_active != hall_button_last):
          drv.sequence[0] = adafruit_drv2605.Effect(17)
          drv.play()
          red.start(100)
-         sleep(0.125)
+         sleep(0.1)
          red.stop()
-      if (hall_button_active):
-         #CAPTURE PHOTO, SIGNLE OR BURST
+         sleep(0.15)
+         #CAPTURE PHOTO
+      elif (hall_button_active):
+         drv.sequence[0] = adafruit_drv2605.Effect(11)
+         drv.play()
+         #CAPTURE BURST
          sleep(0.25)
+
+
 
 #Magnet at Mission 1, one long red flash
    if (hall_mode == 4 and hall_mode != hall_mode_last):
       print('Mission 1 activated')
-      drv.sequence[0] = adafruit_drv2605.Effect(110)
+      drv.sequence[0] = adafruit_drv2605.Effect(58)
       drv.play()
       red.start(100)
       sleep(0.75)
@@ -167,7 +174,7 @@ while True:
 #Magnet at Mission 2 , flash  red then green twice.
    if (hall_mode == 5 and hall_mode != hall_mode_last):
       print('Mission 2 activated')
-      drv.sequence[0] = adafruit_drv2605.Effect(86)
+      drv.sequence[0] = adafruit_drv2605.Effect(58)
       drv.play()
       red.start(100)
       sleep(0.75)
@@ -181,7 +188,7 @@ while True:
 #Magnet at Power Off Hall,  flash red long, medium, short.
    if (hall_mode == 6 and hall_mode != hall_mode_last):
       print('Powerdown activated')
-      drv.sequence[0] = adafruit_drv2605.Effect(110)
+      drv.sequence[0] = adafruit_drv2605.Effect(47)
       drv.play()
       red.stop()
       for x in range (3): #3 short then long flashes

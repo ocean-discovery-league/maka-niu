@@ -12,7 +12,7 @@ while True:
 	drv.sequence[0] = adafruit_drv2605.Effect(effect_id)
 
 	drv.play()
-	time.sleep(0.5)
+	time.sleep(1)
 	drv.stop()
 
 	effect_id+=1
