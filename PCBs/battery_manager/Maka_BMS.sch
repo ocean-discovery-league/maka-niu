@@ -2437,4 +2437,14 @@ Wire Wire Line
 Connection ~ 1000 2150
 Text Label 950  5400 0    79   ~ 0
 BATT_OUT
+Wire Notes Line
+	6250 2350 7350 2350
+Wire Notes Line
+	7350 2350 7350 1950
+Wire Notes Line
+	7350 1950 6250 1950
+Wire Notes Line
+	6250 1950 6250 2350
+Text Notes 6350 2300 0    79   ~ 0
+CUT THIS LINE
 $EndSCHEMATC
