@@ -24,15 +24,15 @@ red = GPIO.PWM(12, 1000) #(pin, freq)
 #//green_pulse_up = 1
 
 #setup Hall sensor pins. All pulled up, so active is when low
-GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(10, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(9, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(25, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(11, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(18, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #push button
+GPIO.setup(11, GPIO.IN, pull_up_down = GPIO.PUD_UP) #wifi mode
+GPIO.setup(25, GPIO.IN, pull_up_down = GPIO.PUD_UP) #video mode
+GPIO.setup(9, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #photo mode
+GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP) #mission 2 mode
+GPIO.setup(10, GPIO.IN, pull_up_down = GPIO.PUD_UP) #mission 1 mode
+GPIO.setup(18, GPIO.IN, pull_up_down = GPIO.PUD_UP) #power down signal
 
-#establish hall dial variables
+#hall dial variables
 hall_button_active = 0
 hall_button_last = 0
 hall_active = arr.array('i', [0,0,0,0,0,0])
@@ -51,15 +51,15 @@ sys.stdout.flush()
 while True:
    sleep(0.01)
 
-# collect raw hall states, use 1 - GPIO, because they are pull up, active low.
-   hall_button_last = hall_button_active #button hall
-   hall_button_active = 1-GPIO.input(8)
-   hall_active[0] = 1-GPIO.input(11) #mode halls
-   hall_active[1] = 1-GPIO.input(25)
-   hall_active[2] = 1-GPIO.input(9)
-   hall_active[3] = 1-GPIO.input(10)
-   hall_active[4] = 1-GPIO.input(24)
-   hall_active[5] = 1-GPIO.input(18) #mode hall for power
+# collect raw hall states, use 1 - GPIO, because they are pull up and active low.
+   hall_button_last = hall_button_active
+   hall_button_active = 1-GPIO.input(8)  #push button
+   hall_active[0] = 1-GPIO.input(11)     #wifi mode
+   hall_active[1] = 1-GPIO.input(25)     #video mode
+   hall_active[2] = 1-GPIO.input(9)      #photo mode
+   hall_active[3] = 1-GPIO.input(10)     #mission 1 mode
+   hall_active[4] = 1-GPIO.input(24)     #mission 2 mode
+   hall_active[5] = 1-GPIO.input(18)     #powerdown signal
 
 # determine overall overtime confidence in each hall sensor being active
    for x in range(6):
