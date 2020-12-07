@@ -50,32 +50,32 @@ import qwiic_titan_gps
 
 def run_example():
 
-    print("Example code for XM1110, based on SparkFun GPS Breakout - XA1110")
-    qwiicGPS = qwiic_titan_gps.QwiicTitanGps()
+	print("Example code for XM1110, based on SparkFun GPS Breakout - XA1110")
+	qwiicGPS = qwiic_titan_gps.QwiicTitanGps()
 
-    if qwiicGPS.connected is False:
-        print("Could not connect to to the GPS Unit. Double check that it's wired correctly.", file=sys.stderr)
-        return
+	if qwiicGPS.connected is False:
+		print("Could not connect to to the GPS Unit. Double check that it's wired correctly.", file=sys.stderr)
+		return
 
-    qwiicGPS.begin()
+	qwiicGPS.begin()
 
-    while True:
-        if qwiicGPS.get_nmea_data() is True:
+	while True:
+		if qwiicGPS.get_nmea_data() is True:
             	#access specific items by name like this, lui
-		print("UTC time: {}, latitude: {} longitude: {}".format(
-			qwiicGPS.gnss_messages["Time"],
-			qwiicGPS.gnss_messages["Latitude"],
-			qwiicGPS.gnss_messages["Longitude"],))
+			print("UTC time: {}, latitude: {} longitude: {}".format(
+				qwiicGPS.gnss_messages["Time"],
+				qwiicGPS.gnss_messages["Latitude"],
+				qwiicGPS.gnss_messages["Longitude"],))
 
 		#or to print everything, use this, lui
 		for k,v in qwiicGPS.gnss_messages.items():
                 	print(k, ":", v)
 		print('\n')
-        sleep(1) #GPSS refreshes/reloads the i2c buffer once a second, so do not request data in less time. lui
+	sleep(1) #GPSS refreshes/reloads the i2c buffer once a second, so do not request data in less time. lui
 
 if __name__ == '__main__':
-    try:
-        run_example()
-    except (KeyboardInterrupt, SystemExit) as exErr:
-        print("Ending Basic Example.")
-        sys.exit(0)
+	try:
+		run_example()
+	except (KeyboardInterrupt, SystemExit) as exErr:
+		print("Ending Basic Example.")
+	sys.exit(0)
