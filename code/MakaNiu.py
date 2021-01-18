@@ -14,6 +14,8 @@ import qwiic_titan_gps
 from kellerLD import KellerLD
 
 ############################################################### SETUP
+i2c_rotation = 0 # alternate i2c jobs to minimize delay
+
 #setup i2c for haptic feedback and battery fuel gage
 i2c = busio.I2C(board.SCL, board.SDA)
 drv = adafruit_drv2605.DRV2605(i2c)
@@ -24,6 +26,7 @@ drv.play()
 #battery = adafruit_lc709203f.LC709203F(board.I2C())
 #battery.pack_size = adafruit_lc709203f.PackSize.MAH3000 #actually 3500 but not an option
 #battery_low_counter = 0
+batt_volt = 3.5 #currently disabled feature
 
 #setup i2c for GPS, would really like to fuse all the i2c into one library
 gps = qwiic_titan_gps.QwiicTitanGps()
@@ -70,6 +73,7 @@ hall_mode_last = 0
 #other variables
 recording = 0 #when recording, you can't change mode willy nilly
 end_recording_mode_changed_flag = 0
+photo_burst_time = time.time()
 
 ################################################################# MAIN FOREVER LOOP
 print('Maka Niu Python Program Started.')
@@ -78,16 +82,18 @@ while True:
    sleep(0.01)
 
 
-# every second, update GPS data, battery info, and pressure/temp info
-   if (time.time() - t) > 10:
+# every second, update GPS data, battery info, and pressure/temp info, rotate to minimize time gaps
+   if (time.time() - t) > 0.33:
       t = time.time()
-      if gps.connected is True:
-         if gps.get_nmea_data() is True:
-            for k, v in gps.gnss_messages.items():
-               print(k, ":", v)
+      i2c_rotation +=1
+      if i2c_rotation == 1 and hall_button_active==0: #gps takes a logn time and interferes with photo burst
+         if gps.connected is True:
+            if gps.get_nmea_data() is True:
+               for k, v in gps.gnss_messages.items():
+                  print(k, ":", v)
 
+      elif i2c_rotation == 2:
 #        batt_volt = battery.cell_voltage
-         batt_volt = 3.5
 #        print("Cells at %0.3f Volts" % (batt_volt))
          if batt_volt < 3.1: #BATTERIES Dying!!!
             battery_low_counter +=1
@@ -112,9 +118,11 @@ while True:
                sys.exit()
          else:
             battery_low_counter = 0
-      outside.read()
-      print("pressure: %7.4f bar \t estimated depth: %7.1f meters \t temperature: %0.2f C\n" % (outside.pressure(), outside.pressure()*10-10, outside.temperature()))
-      sys.stdout.flush()
+      elif i2c_rotation ==3:
+         outside.read()
+         print("pressure: %7.4f bar \t estimated depth: %7.1f meters \t temperature: %0.2f C\n" % (outside.pressure(), outside.pressure()*10-10, outside.temperature()))
+         sys.stdout.flush()
+      i2c_rotation %= 3
 
 # collect raw hall states, use 1 - GPIO, because they are pull up and active low.
    hall_button_last = hall_button_active
@@ -245,7 +253,8 @@ while True:
          print('Photo capture')
          sys.stdout.flush()
 
-      elif (hall_button_active):
+      elif (hall_button_active and (time.time() - photo_burst_time > 0.24)):
+         photo_burst_time = time.time()
          drv.stop()
          drv.sequence[0] = adafruit_drv2605.Effect(17) #17 for solid click , 80 for short vib
          drv.play()
@@ -253,7 +262,7 @@ while True:
          os.system('echo im 1 > /var/www/html/FIFO')
          print('*')
          sys.stdout.flush()
-         sleep(0.25)
+         #sleep(0.25)
 
 
 
