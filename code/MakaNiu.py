@@ -2,7 +2,6 @@
 import time
 from time import sleep
 import os
-# from __future__import print_funtion
 import RPi.GPIO as GPIO
 import array as arr
 import sys
@@ -10,12 +9,21 @@ from subprocess import call
 import board
 import busio
 import adafruit_drv2605
+#import adafruit_lc709203f
 import qwiic_titan_gps
+from kellerLD import KellerLD
 
 ############################################################### SETUP
-#setup i2c for haptic feedback
-#i2c = busio.I2C(board.SCL, board.SDA)
-#drv = adafruit_drv2605.DRV2605(i2c)
+#setup i2c for haptic feedback and battery fuel gage
+i2c = busio.I2C(board.SCL, board.SDA)
+drv = adafruit_drv2605.DRV2605(i2c)
+drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
+drv.play()
+
+#setup i2c for battery fuel gage/ Sadly this module eventually cayses a CRC crash. The library is very new and not well documented/supported.
+#battery = adafruit_lc709203f.LC709203F(board.I2C())
+#battery.pack_size = adafruit_lc709203f.PackSize.MAH3000 #actually 3500 but not an option
+#battery_low_counter = 0
 
 #setup i2c for GPS, would really like to fuse all the i2c into one library
 gps = qwiic_titan_gps.QwiicTitanGps()
@@ -27,7 +35,12 @@ if gps.connected is False:
 t = time.time()
 have_gps_fix = False
 
-#setup timer for videos (30 minute videos deal with power loss)
+#setup i2c for keller pressure/temperature sensor
+outside = KellerLD()
+outside.init()
+
+
+#setup timer for videos
 video_started_time = time.time()
 
 #setup LED pwms pins
@@ -59,21 +72,49 @@ recording = 0 #when recording, you can't change mode willy nilly
 end_recording_mode_changed_flag = 0
 
 ################################################################# MAIN FOREVER LOOP
-print('Welcome. Intitiating LED Dial test program. Enjoy')
+print('Maka Niu Python Program Started.')
 sys.stdout.flush()
 while True:
    sleep(0.01)
 
 
-# collect GPS data if desired, in X second (no less than 1) intervals
-   if gps_available:
-      if gps.connected is True and (time.time() - t) > 5:
-         t = time.time()
+# every second, update GPS data, battery info, and pressure/temp info
+   if (time.time() - t) > 1:
+      t = time.time()
+      if gps.connected is True:
          if gps.get_nmea_data() is True:
             for k, v in gps.gnss_messages.items():
                print(k, ":", v)
-            print('\n')
-            sys.stdout.flush()
+
+#        batt_volt = battery.cell_voltage
+         batt_volt = 3.5
+#         print("Cells at %0.3f Volts" % (batt_volt))
+         if batt_volt < 3.1: #BATTERIES Dying!!!
+            battery_low_counter +=1
+            if battery_low_counter >=5:
+               print('Batteries critically low, initiating shutdown.')
+               sys.stdout.flush()
+               if recording:
+                  os.system('echo ca 0 > /var/www/html/FIFO')
+                  print('Ending video capture')
+               red.stop()
+               for x in range (2): #2 short then long flashes
+                  red.start(100)
+                  sleep(0.1)
+                  red.stop()
+                  sleep(0.2)
+                  red.start(100)
+                  sleep(0.4)
+                  red.stop()
+                  sleep(0.2)
+               GPIO.cleanup()
+               call("sudo shutdown -h now", shell=True)
+               sys.exit()
+         else:
+            battery_low_counter = 0
+      outside.read()
+      print("pressure: %7.4f bar \t estimated depth: %7.1f meters \t temperature: %0.2f C\n" % (outside.pressure(), outside.pressure()*10-10, outside.temperature()))
+      sys.stdout.flush()
 
 # collect raw hall states, use 1 - GPIO, because they are pull up and active low.
    hall_button_last = hall_button_active
@@ -116,14 +157,14 @@ while True:
          os.system('sudo ifconfig wlan0 up')
          print('Wifi Mode actvated. three red flashes')
          sys.stdout.flush()
-#         drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
-#         drv.play()
+         drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
+         drv.play()
          for x in range(3):
             sleep(0.2)
             red.start(100)
             sleep(0.2)
             red.stop()
-#         drv.stop()
+         drv.stop()
 
 #Magnet at Video Mode, constant red one. When button pressed, go dark and record video. Press again, end video and start led
    if (hall_mode == 2):
@@ -131,8 +172,8 @@ while True:
          #os.system('sudo ifconfig wlan0 down')
          print('Video Mode activated, press button to begin recording')
          sys.stdout.flush()
-#         drv.sequence[0] = adafruit_drv2605.Effect(58) #58, 64, 95 are good choice transition buzzes
-#         drv.play()
+         drv.sequence[0] = adafruit_drv2605.Effect(58) #58, 64, 95 are good choice transition buzzes
+         drv.play()
          red.start(100)
          recording = 0
 
@@ -142,9 +183,9 @@ while True:
             os.system('echo ca 1 > /var/www/html/FIFO')
             print('Starting video capture now')
             sys.stdout.flush()
-#            drv.stop()
-#            drv.sequence[0] = adafruit_drv2605.Effect(74) #1
-#            drv.play()
+            drv.stop()
+            drv.sequence[0] = adafruit_drv2605.Effect(74) #1
+            drv.play()
             red.stop()
             recording = 1
             video_started_time = time.time()
@@ -154,9 +195,9 @@ while True:
             os.system('echo ca 0 > /var/www/html/FIFO')
             print('Ending video capture')
             sys.stdout.flush()
-#            drv.stop()
-#            drv.sequence[0] = adafruit_drv2605.Effect(74) #10 nice double
-#            drv.play()
+            drv.stop()
+            drv.sequence[0] = adafruit_drv2605.Effect(74) #10 nice double
+            drv.play()
             red.start(100)
             recording = 0
 
@@ -183,8 +224,8 @@ while True:
          #os.system('sudo ifconfig wlan0 down')
          print('Picture Mode activated, 5 flashes. Press button to capture image, hold for burst')
          sys.stdout.flush()
-#         drv.sequence[0] = adafruit_drv2605.Effect(58)
-#         drv.play()
+         drv.sequence[0] = adafruit_drv2605.Effect(58)
+         drv.play()
          for x in range (5): 
             sleep(0.12)
             red.start(100)
@@ -192,9 +233,9 @@ while True:
             red.stop()
       #Flash red both only for press
       if (hall_button_active and hall_button_active != hall_button_last):
-#         drv.stop()
-#         drv.sequence[0] = adafruit_drv2605.Effect(74)
-#         drv.play()
+         drv.stop()
+         drv.sequence[0] = adafruit_drv2605.Effect(74)
+         drv.play()
          red.start(100)
          sleep(0.1)
          red.stop()
@@ -205,9 +246,9 @@ while True:
          sys.stdout.flush()
 
       elif (hall_button_active):
-#         drv.stop()
-#         drv.sequence[0] = adafruit_drv2605.Effect(80) #17 for solid click
-#         drv.play()
+         drv.stop()
+         drv.sequence[0] = adafruit_drv2605.Effect(80) #17 for solid click
+         drv.play()
          #CAPTURE BURST
          os.system('echo im 1 > /var/www/html/FIFO')
          print('*')
@@ -221,8 +262,8 @@ while True:
       os.system('sudo ifconfig wlan0 down')
       print('Mission 1 activated')
       sys.stdout.flush()
-#      drv.sequence[0] = adafruit_drv2605.Effect(58)
-#      drv.play()
+      drv.sequence[0] = adafruit_drv2605.Effect(58)
+      drv.play()
       red.start(100)
       sleep(0.75)
       red.stop()
@@ -232,8 +273,8 @@ while True:
       os.system('sudo ifconfig wlan0 down')
       print('Mission 2 activated')
       sys.stdout.flush()
-#      drv.sequence[0] = adafruit_drv2605.Effect(58)
-#      drv.play()
+      drv.sequence[0] = adafruit_drv2605.Effect(58)
+      drv.play()
       red.start(100)
       sleep(0.75)
       red.stop()
@@ -247,8 +288,8 @@ while True:
    if (hall_mode == 6 and hall_mode != hall_mode_last):
       print('Powerdown activated')
       sys.stdout.flush()
-#      drv.sequence[0] = adafruit_drv2605.Effect(47)
-#      drv.play()
+      drv.sequence[0] = adafruit_drv2605.Effect(47)
+      drv.play()
       red.stop()
       for x in range (2): #2 short then long flashes
          red.start(100)
