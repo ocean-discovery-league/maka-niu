@@ -79,7 +79,7 @@ while True:
 
 
 # every second, update GPS data, battery info, and pressure/temp info
-   if (time.time() - t) > 1:
+   if (time.time() - t) > 10:
       t = time.time()
       if gps.connected is True:
          if gps.get_nmea_data() is True:
@@ -88,7 +88,7 @@ while True:
 
 #        batt_volt = battery.cell_voltage
          batt_volt = 3.5
-#         print("Cells at %0.3f Volts" % (batt_volt))
+#        print("Cells at %0.3f Volts" % (batt_volt))
          if batt_volt < 3.1: #BATTERIES Dying!!!
             battery_low_counter +=1
             if battery_low_counter >=5:
@@ -151,7 +151,7 @@ while True:
       sys.stdout.flush()
       red.stop()
 
-# Magnet at Wifi Mode,  three red flashes. 
+# Magnet at Wifi Mode,  three red flashes.
    if (hall_mode == 1):
       if (hall_mode != hall_mode_last):
          os.system('sudo ifconfig wlan0 up')
@@ -247,7 +247,7 @@ while True:
 
       elif (hall_button_active):
          drv.stop()
-         drv.sequence[0] = adafruit_drv2605.Effect(80) #17 for solid click
+         drv.sequence[0] = adafruit_drv2605.Effect(17) #17 for solid click , 80 for short vib
          drv.play()
          #CAPTURE BURST
          os.system('echo im 1 > /var/www/html/FIFO')
