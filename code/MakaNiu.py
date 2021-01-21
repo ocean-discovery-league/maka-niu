@@ -40,7 +40,10 @@ have_gps_fix = False
 
 #setup i2c for keller pressure/temperature sensor
 outside = KellerLD()
-outside.init()
+if not outside.init():
+   print("failed to initiate Keller LD sensor!")
+   exit(1)
+
 
 
 #setup timer for videos
@@ -78,6 +81,9 @@ photo_burst_time = time.time()
 ################################################################# MAIN FOREVER LOOP
 print('Maka Niu Python Program Started.')
 sys.stdout.flush()
+
+sleep(3) #demanded by keller
+
 while True:
    sleep(0.01)
 
@@ -118,10 +124,15 @@ while True:
                sys.exit()
          else:
             battery_low_counter = 0
+
       elif i2c_rotation ==3:
-         outside.read()
-         print("pressure: %7.4f bar \t estimated depth: %7.1f meters \t temperature: %0.2f C\n" % (outside.pressure(), outside.pressure()*10-10, outside.temperature()))
-         sys.stdout.flush()
+         try:
+            outside.read()
+            print("pressure: %7.4f bar \t estimated depth: %7.1f meters \t temperature: %0.2f C\n" % (outside.pressure(), outside.pressure()*10-10, outside.temperature()))
+            sys.stdout.flush()
+         except Exception as e:
+            print(e)
+
       i2c_rotation %= 3
 
 # collect raw hall states, use 1 - GPIO, because they are pull up and active low.
