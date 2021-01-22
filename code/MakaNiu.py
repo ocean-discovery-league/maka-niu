@@ -9,12 +9,66 @@ from subprocess import call
 import board
 import busio
 import adafruit_drv2605
-#import adafruit_lc709203f
+import spidev
 import qwiic_titan_gps
 from kellerLD import KellerLD
 
+
+############################################################### FUCNTIONS
+def getBatteryVoltage(vref = 3.3):
+   msg = 0b11
+   msg = ((msg << 1) + 0) << 5
+   msg = [msg, 0b00000000]
+   reply = spi.xfer2(msg)
+   adc = 0
+   for n in reply:
+      adc = (adc << 8) + n
+   adc = adc >> 1
+   voltage = (vref * adc)/1024
+   pack_voltage = voltage * 3.9 + 0.3 # adc * voltage + plus diode forward drop
+   return pack_voltage
+
+
 ############################################################### SETUP
-i2c_rotation = 0 # alternate i2c jobs to minimize delay
+#setup LED pwms pins for feedback
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(12, GPIO.OUT)
+GPIO.setup(13, GPIO.OUT)
+red = GPIO.PWM(12, 1000) #(pin, freq)
+green = GPIO.PWM(13, 1000) #(pin, freq)
+
+
+#setup SPI for battery ADC via MCP3002 and a 100K/33K voltage divider on the battery pack voltage
+spi = spidev.SpiDev(1,2)
+spi.max_speed_hz = 10000
+battery_low_counter = 0
+battery_volt = 12
+adc_connected = False
+try:
+   battery_volt = getBatteryVoltage()
+   print("Starting battery voltage:" , round(battery_volt,3), "V")
+   adc_connected = True
+except:
+   print("ADC failed:")
+
+if battery_volt < 9.0:
+   print('Batteries critically low, initiating shutdown in 60 seconds.')
+   sys.stdout.flush()
+   red.stop()
+   for x in range (2): #2 short then long flashes
+      red.start(100)
+      sleep(0.1)
+      red.stop()
+      sleep(0.2)
+      red.start(100)
+      sleep(0.4)
+      red.stop()
+      sleep(0.2)
+   sleep(60)
+   GPIO.cleanup()
+   call("sudo shutdown -h now", shell=True)
+   sys.exit()
+
 
 #setup i2c for haptic feedback and battery fuel gage
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -22,17 +76,12 @@ drv = adafruit_drv2605.DRV2605(i2c)
 drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
 drv.play()
 
-#setup i2c for battery fuel gage/ Sadly this module eventually cayses a CRC crash. The library is very new and not well documented/supported.
-#battery = adafruit_lc709203f.LC709203F(board.I2C())
-#battery.pack_size = adafruit_lc709203f.PackSize.MAH3000 #actually 3500 but not an option
-#battery_low_counter = 0
-batt_volt = 3.5 #currently disabled feature
 
 #setup i2c for GPS, would really like to fuse all the i2c into one library
 gps = qwiic_titan_gps.QwiicTitanGps()
-gps_available = True
+gps_connected = True
 if gps.connected is False:
-   gps_available = False
+   gps_connected = False
    print("Could not connect to GPS.", file = sys.stderr)
    gps.begin()
 t = time.time()
@@ -40,20 +89,18 @@ have_gps_fix = False
 
 #setup i2c for keller pressure/temperature sensor
 outside = KellerLD()
-if not outside.init():
-   print("failed to initiate Keller LD sensor!")
-   exit(1)
+keller_connected = True
+try:
+   outside.init()
+except:
+   keller_connected = False
+   print("Failed to initiate Keller LD sensor!")
 
 
+#if not outside.init():
+ #  keller_connected = False
+ #  print("failed to initiate Keller LD sensor!")
 
-#setup timer for videos
-video_started_time = time.time()
-
-#setup LED pwms pins
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(12, GPIO.OUT)
-GPIO.setup(13, GPIO.OUT)
-red = GPIO.PWM(12, 1000) #(pin, freq)
 
 #setup Hall sensor pins. All pulled up, so active is when low
 GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #push button
@@ -75,14 +122,24 @@ hall_mode_last = 0
 
 #other variables
 recording = 0 #when recording, you can't change mode willy nilly
-end_recording_mode_changed_flag = 0
-photo_burst_time = time.time()
+end_recording_mode_changed_flag = 0 #flag to end video if mode changes
+photo_burst_time = time.time() #to manag time delay between images in burtst
+interface_rotation = 0 # alternate i2c jobs and spi job to minimize delay
+video_started_time = time.time() # for chopping video to fixed max lentgh
 
 ################################################################# MAIN FOREVER LOOP
-print('Maka Niu Python Program Started.')
+print('Maka Niu Program iniated. Entering main forever loop.')
 sys.stdout.flush()
 
+
+if adc_connected and gps_connected and keller_connected:
+   green.start(100)
+
 sleep(3) #demanded by keller
+green.stop()
+
+
+
 
 while True:
    sleep(0.01)
@@ -91,20 +148,20 @@ while True:
 # every second, update GPS data, battery info, and pressure/temp info, rotate to minimize time gaps
    if (time.time() - t) > 0.33:
       t = time.time()
-      i2c_rotation +=1
-      if i2c_rotation == 1 and hall_button_active==0: #gps takes a logn time and interferes with photo burst
+      interface_rotation +=1
+      if gps_connected and interface_rotation == 1 and hall_button_active==0: #gps takes a logn time and interferes with photo burst
          if gps.connected is True:
             if gps.get_nmea_data() is True:
                for k, v in gps.gnss_messages.items():
                   print(k, ":", v)
 
-      elif i2c_rotation == 2:
-#        batt_volt = battery.cell_voltage
-#        print("Cells at %0.3f Volts" % (batt_volt))
-         if batt_volt < 3.1: #BATTERIES Dying!!!
+      elif adc_connected and interface_rotation == 2:
+         battery_volt = getBatteryVoltage()
+         print("Battery Pack at at %0.3f Volts" % (battery_volt))
+         if battery_volt < 9.0: #BATTERIES Dying!!!
             battery_low_counter +=1
             if battery_low_counter >=5:
-               print('Batteries critically low, initiating shutdown.')
+               print('Batteries critically low, ending processes now, initiating shutdown in 60 seconds.')
                sys.stdout.flush()
                if recording:
                   os.system('echo ca 0 > /var/www/html/FIFO')
@@ -119,13 +176,14 @@ while True:
                   sleep(0.4)
                   red.stop()
                   sleep(0.2)
+               sleep(60)
                GPIO.cleanup()
                call("sudo shutdown -h now", shell=True)
                sys.exit()
          else:
             battery_low_counter = 0
 
-      elif i2c_rotation ==3:
+      elif keller_connected and interface_rotation ==3:
          try:
             outside.read()
             print("pressure: %7.4f bar \t estimated depth: %7.1f meters \t temperature: %0.2f C\n" % (outside.pressure(), outside.pressure()*10-10, outside.temperature()))
@@ -133,7 +191,7 @@ while True:
          except Exception as e:
             print(e)
 
-      i2c_rotation %= 3
+      interface_rotation %= 3
 
 # collect raw hall states, use 1 - GPIO, because they are pull up and active low.
    hall_button_last = hall_button_active
@@ -323,3 +381,4 @@ while True:
       GPIO.cleanup()
       call("sudo shutdown -h now", shell=True)
       sys.exit()
+
