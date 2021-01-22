@@ -25,7 +25,7 @@ def getBatteryVoltage(vref = 3.3):
       adc = (adc << 8) + n
    adc = adc >> 1
    voltage = (vref * adc)/1024
-   pack_voltage = voltage * 3.9 + 0.3 # adc * voltage + plus diode forward drop
+   pack_voltage = voltage * 4 + 0.3 # adc * voltage + plus diode forward drop
    return pack_voltage
 
 
@@ -43,13 +43,18 @@ spi = spidev.SpiDev(1,2)
 spi.max_speed_hz = 10000
 battery_low_counter = 0
 battery_volt = 12
-adc_connected = False
+adc_connected = True
 try:
    battery_volt = getBatteryVoltage()
    print("Starting battery voltage:" , round(battery_volt,3), "V")
-   adc_connected = True
 except:
-   print("ADC failed:")
+   print("ADC not connected, SPI fail")
+   adc_connected = False
+
+if battery_volt < 5 or battery_volt > 15:
+   print("ADC not connected, values out of range.")
+   adc_connected = False
+   battery_volt = 12
 
 if battery_volt < 9.0:
    print('Batteries critically low, initiating shutdown in 60 seconds.')
@@ -72,9 +77,14 @@ if battery_volt < 9.0:
 
 #setup i2c for haptic feedback and battery fuel gage
 i2c = busio.I2C(board.SCL, board.SDA)
-drv = adafruit_drv2605.DRV2605(i2c)
-drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
-drv.play()
+haptic_connected = True
+try:
+   drv = adafruit_drv2605.DRV2605(i2c)
+   drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
+   drv.play()
+except:
+   print("Haptic feedback not connected.")
+   haptic_connected = False
 
 
 #setup i2c for GPS, would really like to fuse all the i2c into one library
@@ -82,10 +92,9 @@ gps = qwiic_titan_gps.QwiicTitanGps()
 gps_connected = True
 if gps.connected is False:
    gps_connected = False
-   print("Could not connect to GPS.", file = sys.stderr)
+   print("GPS device not connected.", file = sys.stderr)
    gps.begin()
-t = time.time()
-have_gps_fix = False
+
 
 #setup i2c for keller pressure/temperature sensor
 outside = KellerLD()
@@ -94,13 +103,7 @@ try:
    outside.init()
 except:
    keller_connected = False
-   print("Failed to initiate Keller LD sensor!")
-
-
-#if not outside.init():
- #  keller_connected = False
- #  print("failed to initiate Keller LD sensor!")
-
+   print("Keller LD sensor not connected.")
 
 #setup Hall sensor pins. All pulled up, so active is when low
 GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #push button
@@ -126,6 +129,8 @@ end_recording_mode_changed_flag = 0 #flag to end video if mode changes
 photo_burst_time = time.time() #to manag time delay between images in burtst
 interface_rotation = 0 # alternate i2c jobs and spi job to minimize delay
 video_started_time = time.time() # for chopping video to fixed max lentgh
+t = time.time() # for timing interface comms
+
 
 ################################################################# MAIN FOREVER LOOP
 print('Maka Niu Program iniated. Entering main forever loop.')
@@ -133,17 +138,14 @@ sys.stdout.flush()
 
 
 if adc_connected and gps_connected and keller_connected:
+   print('ADC, GPS, and Keller hardware all talking.')
    green.start(100)
-
-sleep(3) #demanded by keller
+sleep(3) #demanded by keller but also sued for all OK LED
 green.stop()
-
-
 
 
 while True:
    sleep(0.01)
-
 
 # every second, update GPS data, battery info, and pressure/temp info, rotate to minimize time gaps
    if (time.time() - t) > 0.33:
@@ -156,7 +158,9 @@ while True:
                   print(k, ":", v)
 
       elif adc_connected and interface_rotation == 2:
-         battery_volt = getBatteryVoltage()
+         reading = getBatteryVoltage()
+         if reading < 20 and reading > 5:
+            battery_volt = battery_volt*0.95 + reading*0.05
          print("Battery Pack at at %0.3f Volts" % (battery_volt))
          if battery_volt < 9.0: #BATTERIES Dying!!!
             battery_low_counter +=1
@@ -205,7 +209,7 @@ while True:
 
 # determine overall overtime confidence in each hall sensor being active
    for x in range(6):
-      if(hall_active[x] and hall_confidence[x] < 100):
+      if(hall_active[x] and hall_confidence[x] < 50):
          hall_confidence[x] += 1
       elif (hall_active[x] == 0 and hall_confidence[x] > 0):
          hall_confidence[x] -= 1
@@ -214,11 +218,12 @@ while True:
    hall_mode_last = hall_mode
    hall_mode = 0
    for x in range(6):
-      if (hall_confidence[x] >= 50):
+      if (hall_confidence[x] >= 30):
          hall_mode = 1 + x
    if (recording and hall_mode != 2):
       hall_mode = 2
       end_recording_mode_changed_flag = 1
+
 
 
 ####################################################################### MODES
@@ -234,14 +239,16 @@ while True:
          os.system('sudo ifconfig wlan0 up')
          print('Wifi Mode actvated. three red flashes')
          sys.stdout.flush()
-         drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
-         drv.play()
+         if haptic_connected:
+            drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
+            drv.play()
          for x in range(3):
             sleep(0.2)
             red.start(100)
             sleep(0.2)
             red.stop()
-         drv.stop()
+         if haptic_connected:
+            drv.stop()
 
 #Magnet at Video Mode, constant red one. When button pressed, go dark and record video. Press again, end video and start led
    if (hall_mode == 2):
@@ -249,8 +256,9 @@ while True:
          #os.system('sudo ifconfig wlan0 down')
          print('Video Mode activated, press button to begin recording')
          sys.stdout.flush()
-         drv.sequence[0] = adafruit_drv2605.Effect(58) #58, 64, 95 are good choice transition buzzes
-         drv.play()
+         if haptic_connected:
+            drv.sequence[0] = adafruit_drv2605.Effect(58) #58, 64, 95 are good choice transition buzzes
+            drv.play()
          red.start(100)
          recording = 0
 
@@ -260,9 +268,10 @@ while True:
             os.system('echo ca 1 > /var/www/html/FIFO')
             print('Starting video capture now')
             sys.stdout.flush()
-            drv.stop()
-            drv.sequence[0] = adafruit_drv2605.Effect(74) #1
-            drv.play()
+            if haptic_connected:
+               drv.stop()
+               drv.sequence[0] = adafruit_drv2605.Effect(74) #1
+               drv.play()
             red.stop()
             recording = 1
             video_started_time = time.time()
@@ -272,9 +281,10 @@ while True:
             os.system('echo ca 0 > /var/www/html/FIFO')
             print('Ending video capture')
             sys.stdout.flush()
-            drv.stop()
-            drv.sequence[0] = adafruit_drv2605.Effect(74) #10 nice double
-            drv.play()
+            if haptic_connected:
+               drv.stop()
+               drv.sequence[0] = adafruit_drv2605.Effect(74) #10 nice double
+               drv.play()
             red.start(100)
             recording = 0
 
@@ -301,8 +311,9 @@ while True:
          #os.system('sudo ifconfig wlan0 down')
          print('Picture Mode activated, 5 flashes. Press button to capture image, hold for burst')
          sys.stdout.flush()
-         drv.sequence[0] = adafruit_drv2605.Effect(58)
-         drv.play()
+         if haptic_connected:
+            drv.sequence[0] = adafruit_drv2605.Effect(58)
+            drv.play()
          for x in range (5): 
             sleep(0.12)
             red.start(100)
@@ -310,9 +321,10 @@ while True:
             red.stop()
       #Flash red both only for press
       if (hall_button_active and hall_button_active != hall_button_last):
-         drv.stop()
-         drv.sequence[0] = adafruit_drv2605.Effect(74)
-         drv.play()
+         if haptic_connected:
+            drv.stop()
+            drv.sequence[0] = adafruit_drv2605.Effect(74)
+            drv.play()
          red.start(100)
          sleep(0.1)
          red.stop()
@@ -324,9 +336,10 @@ while True:
 
       elif (hall_button_active and (time.time() - photo_burst_time > 0.24)):
          photo_burst_time = time.time()
-         drv.stop()
-         drv.sequence[0] = adafruit_drv2605.Effect(17) #17 for solid click , 80 for short vib
-         drv.play()
+         if haptic_connected:
+            drv.stop()
+            drv.sequence[0] = adafruit_drv2605.Effect(17) #17 for solid click , 80 for short vib
+            drv.play()
          #CAPTURE BURST
          os.system('echo im 1 > /var/www/html/FIFO')
          print('*')
@@ -340,8 +353,9 @@ while True:
       os.system('sudo ifconfig wlan0 down')
       print('Mission 1 activated')
       sys.stdout.flush()
-      drv.sequence[0] = adafruit_drv2605.Effect(58)
-      drv.play()
+      if haptic_connected:
+         drv.sequence[0] = adafruit_drv2605.Effect(58)
+         drv.play()
       red.start(100)
       sleep(0.75)
       red.stop()
@@ -351,8 +365,9 @@ while True:
       os.system('sudo ifconfig wlan0 down')
       print('Mission 2 activated')
       sys.stdout.flush()
-      drv.sequence[0] = adafruit_drv2605.Effect(58)
-      drv.play()
+      if haptic_connected:
+         drv.sequence[0] = adafruit_drv2605.Effect(58)
+         drv.play()
       red.start(100)
       sleep(0.75)
       red.stop()
@@ -366,8 +381,9 @@ while True:
    if (hall_mode == 6 and hall_mode != hall_mode_last):
       print('Powerdown activated')
       sys.stdout.flush()
-      drv.sequence[0] = adafruit_drv2605.Effect(47)
-      drv.play()
+      if haptic_connected:
+         drv.sequence[0] = adafruit_drv2605.Effect(47)
+         drv.play()
       red.stop()
       for x in range (2): #2 short then long flashes
          red.start(100)
