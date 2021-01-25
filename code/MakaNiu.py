@@ -37,14 +37,18 @@ GPIO.setup(13, GPIO.OUT)
 red = GPIO.PWM(12, 1000) #(pin, freq)
 green = GPIO.PWM(13, 1000) #(pin, freq)
 
+#setup GPIO pin  that enables 3.3V regulator powering GPS, Keller, IMU.
+GPIO.setup(18, GPIO.OUT)
+GPIO.output(18, GPIO.HIGH) #can potentially set low to preserve a little power
+sleep(1)
 
 #setup SPI for battery ADC via MCP3002 and a 100K/33K voltage divider on the battery pack voltage
-spi = spidev.SpiDev(1,2)
-spi.max_speed_hz = 10000
 battery_low_counter = 0
 battery_volt = 12
 adc_connected = True
 try:
+   spi = spidev.SpiDev(1,2)
+   spi.max_speed_hz = 10000
    battery_volt = getBatteryVoltage()
    print("Starting battery voltage:" , round(battery_volt,3), "V")
 except:
@@ -112,7 +116,7 @@ GPIO.setup(25, GPIO.IN, pull_up_down = GPIO.PUD_UP) #video mode
 GPIO.setup(9, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #photo mode
 GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP) #mission 2 mode
 GPIO.setup(10, GPIO.IN, pull_up_down = GPIO.PUD_UP) #mission 1 mode
-GPIO.setup(18, GPIO.IN, pull_up_down = GPIO.PUD_UP) #power down signal
+GPIO.setup(14, GPIO.IN, pull_up_down = GPIO.PUD_UP) #power down signal
 
 #hall dial variables
 hall_button_active = 0
@@ -159,8 +163,8 @@ while True:
 
       elif adc_connected and interface_rotation == 2:
          reading = getBatteryVoltage()
-         if reading < 20 and reading > 5:
-            battery_volt = battery_volt*0.95 + reading*0.05
+         if reading < 15 and reading > 5:
+            battery_volt = battery_volt*0.9 + reading*0.1
          print("Battery Pack at at %0.3f Volts" % (battery_volt))
          if battery_volt < 9.0: #BATTERIES Dying!!!
             battery_low_counter +=1
@@ -205,7 +209,7 @@ while True:
    hall_active[2] = 1-GPIO.input(9)      #photo mode
    hall_active[3] = 1-GPIO.input(10)     #mission 1 mode
    hall_active[4] = 1-GPIO.input(24)     #mission 2 mode
-   hall_active[5] = 1-GPIO.input(18)     #powerdown signal
+   hall_active[5] = 1-GPIO.input(14)     #powerdown signal
 
 # determine overall overtime confidence in each hall sensor being active
    for x in range(6):
