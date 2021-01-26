@@ -39,8 +39,10 @@ green = GPIO.PWM(13, 1000) #(pin, freq)
 
 #setup GPIO pin  that enables 3.3V regulator powering GPS, Keller, IMU.
 GPIO.setup(18, GPIO.OUT)
+#GPIO.output(18, GPIO.LOW) #can potentially set low to preserve a little power
+sleep(0.5)
 GPIO.output(18, GPIO.HIGH) #can potentially set low to preserve a little power
-sleep(1)
+sleep(0.5)
 
 #setup SPI for battery ADC via MCP3002 and a 100K/33K voltage divider on the battery pack voltage
 battery_low_counter = 0
@@ -97,7 +99,7 @@ gps_connected = True
 if gps.connected is False:
    gps_connected = False
    print("GPS device not connected.", file = sys.stderr)
-   gps.begin()
+gps.begin()
 
 
 #setup i2c for keller pressure/temperature sensor
@@ -150,6 +152,7 @@ green.stop()
 
 while True:
    sleep(0.01)
+   green.stop()
 
 # every second, update GPS data, battery info, and pressure/temp info, rotate to minimize time gaps
    if (time.time() - t) > 0.33:
@@ -158,8 +161,17 @@ while True:
       if gps_connected and interface_rotation == 1 and hall_button_active==0: #gps takes a logn time and interferes with photo burst
          if gps.connected is True:
             if gps.get_nmea_data() is True:
-               for k, v in gps.gnss_messages.items():
-                  print(k, ":", v)
+               #for k, v in gps.gnss_messages.items():
+               #   print(k, ":", v)
+               print("UTC time: {}\nSatelite count: {}\nlatitude: {}\nlongitude: {}\n".format(
+                  gps.gnss_messages["Time"],
+                  gps.gnss_messages["Sat_Number"],
+                  gps.gnss_messages["Latitude"],
+                  gps.gnss_messages["Longitude"],))
+               if gps.gnss_messages["Sat_Number"].isdigit():
+                  if int(gps.gnss_messages["Sat_Number"]) > 0:
+                     green.start(100)
+
 
       elif adc_connected and interface_rotation == 2:
          reading = getBatteryVoltage()

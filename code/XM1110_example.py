@@ -71,7 +71,7 @@ def run_example():
 		for k,v in qwiicGPS.gnss_messages.items():
                 	print(k, ":", v)
 		print('\n')
-	sleep(1) #GPSS refreshes/reloads the i2c buffer once a second, so do not request data in less time. lui
+		sleep(1.0) #GPSS refreshes/reloads the i2c buffer once a second, so do not request data in less time. lui
 
 if __name__ == '__main__':
 	try:
