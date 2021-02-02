@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/sudo /usr/bin/python3
 import datetime
 import time
 from time import sleep
@@ -367,8 +367,12 @@ while True:
          red.stop()
          sleep(0.15)
          #CAPTURE PHOTO
+         time_stamp = datetime.datetime.now()+datetime_offset
+#         os.system('echo -n {} | sudo tee /dev/shm/mjpeg/user_annotate2.txt'.format(time_stamp.isoformat("_","milliseconds")))
+         with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
+            print(time_stamp.isoformat("_","milliseconds"), end="", file=f)
          os.system('echo im 1 > /var/www/html/FIFO')
-         print('Photo capture')
+         print('\nPhoto capture')
          sys.stdout.flush()
 
       elif (hall_button_active and (time.time() - photo_burst_time > 0.24)):
@@ -378,6 +382,11 @@ while True:
             drv.sequence[0] = adafruit_drv2605.Effect(17) #17 for solid click , 80 for short vib
             drv.play()
          #CAPTURE BURST
+         time_stamp = datetime.datetime.now()+datetime_offset
+         with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
+            print(time_stamp.isoformat("_","milliseconds"), end="", file=f)
+         #os.system('echo -n {} | sudo tee /dev/shm/mjpeg/user_annotate.txt'.format(time_stamp.isoformat("_","milliseconds")))
+         #os.system('echo -n {} | sudo tee /dev/shm/mjpeg/user_annotate2.txt'.format(time_stamp))
          os.system('echo im 1 > /var/www/html/FIFO')
          print('*')
          sys.stdout.flush()
