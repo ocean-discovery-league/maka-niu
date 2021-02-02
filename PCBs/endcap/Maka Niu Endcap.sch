@@ -379,16 +379,16 @@
 <description>Wireless charging coil</description>
 <pad name="B1" x="-1.4" y="0" drill="1"/>
 <pad name="B2" x="1.4" y="0" drill="1"/>
-<wire x1="-2.5" y1="-1" x2="2.5" y2="-1" width="0.127" layer="21"/>
-<wire x1="2.5" y1="-1" x2="2.5" y2="1" width="0.127" layer="21"/>
-<wire x1="2.5" y1="1" x2="-2.5" y2="1" width="0.127" layer="21"/>
-<wire x1="-2.5" y1="1" x2="-2.5" y2="-1" width="0.127" layer="21"/>
-<text x="-2.5" y="1.2" size="0.6096" layer="21" font="vector">&gt;NAME</text>
-<text x="-2.5" y="-1.7" size="0.6096" layer="21" font="vector">&gt;VALUE</text>
+<text x="0" y="1.0668" size="0.6096" layer="25" font="vector" align="bottom-center">&gt;NAME</text>
+<text x="0" y="-1.0668" size="0.6096" layer="27" font="vector" align="top-center">&gt;VALUE</text>
+<wire x1="-1.397" y1="0.889" x2="-1.397" y2="-0.889" width="0.127" layer="21" curve="180"/>
+<wire x1="1.397" y1="0.889" x2="1.27" y2="-0.889" width="0.127" layer="21" curve="-188.130102"/>
+<wire x1="-1.397" y1="0.889" x2="1.397" y2="0.889" width="0.127" layer="21"/>
+<wire x1="-1.397" y1="-0.889" x2="1.397" y2="-0.889" width="0.127" layer="21"/>
 </package>
 <package name="XM1110_GPS">
 <description>AirPrime XM1110 GPS</description>
-<circle x="-5.5" y="3.9" radius="0.2286" width="0.4572" layer="21"/>
+<circle x="-5.334" y="3.302" radius="0.1016" width="0.4572" layer="21"/>
 <wire x1="-4.75" y1="-4.5" x2="4.75" y2="-4.5" width="0.127" layer="51"/>
 <wire x1="4.75" y1="-4.5" x2="4.75" y2="4.5" width="0.127" layer="51"/>
 <wire x1="4.75" y1="4.5" x2="-4.75" y2="4.5" width="0.127" layer="51"/>
@@ -413,11 +413,11 @@
 <smd name="18" x="0" y="4" dx="0.8" dy="0.7" layer="1" rot="R270"/>
 <smd name="19" x="-1.2" y="4" dx="0.8" dy="0.7" layer="1" rot="R270"/>
 <smd name="20" x="-2.4" y="4" dx="0.8" dy="0.7" layer="1" rot="R270"/>
-<text x="-3.6" y="1.93" size="1.27" layer="51" ratio="15">1</text>
+<text x="-3.6" y="1.93" size="1.27" layer="21" ratio="15">1</text>
 <circle x="-3.75" y="3.42" radius="0.4" width="0.0762" layer="51"/>
 <circle x="-3.75" y="3.42" radius="0.22360625" width="0.0762" layer="51"/>
-<wire x1="-4.8" y1="4.5" x2="-2.7" y2="4.5" width="0.2032" layer="21"/>
-<wire x1="-4.8" y1="4.5" x2="-4.8" y2="1.9" width="0.2032" layer="21"/>
+<wire x1="4.8" y1="-4.5" x2="2.7" y2="-4.5" width="0.2032" layer="21"/>
+<wire x1="4.8" y1="-4.5" x2="4.8" y2="-1.9" width="0.2032" layer="21"/>
 <wire x1="4.8" y1="1.9" x2="4.8" y2="4.5" width="0.2032" layer="21"/>
 <wire x1="-4.8" y1="-1.9" x2="-4.8" y2="-4.5" width="0.2032" layer="21"/>
 <wire x1="2.7" y1="4.5" x2="4.8" y2="4.5" width="0.2032" layer="21"/>
@@ -428,9 +428,9 @@
 <wire x1="3.75" y1="3.4" x2="3.75" y2="-3.4" width="0.0762" layer="39"/>
 <wire x1="3.75" y1="-3.4" x2="-3.75" y2="-3.4" width="0.0762" layer="39"/>
 <wire x1="-3.75" y1="-3.4" x2="-3.75" y2="3.4" width="0.0762" layer="39"/>
-<wire x1="2.691" y1="-4.523" x2="3.58" y2="-4.523" width="0.2032" layer="21"/>
-<wire x1="3.58" y1="-4.523" x2="4.723" y2="-3.38" width="0.2032" layer="21"/>
-<wire x1="4.723" y1="-3.38" x2="4.723" y2="-1.856" width="0.2032" layer="21"/>
+<wire x1="-2.691" y1="4.523" x2="-3.58" y2="4.523" width="0.2032" layer="21"/>
+<wire x1="-3.58" y1="4.523" x2="-4.723" y2="3.38" width="0.2032" layer="21"/>
+<wire x1="-4.723" y1="3.38" x2="-4.723" y2="1.856" width="0.2032" layer="21"/>
 </package>
 <package name="WIRES_2MM_05">
 <description>5 pin through hole 2mm pitch</description>
@@ -11642,7 +11642,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <attribute name="MF" value="MOLEX"/>
 <attribute name="MP" value="0877591450"/>
 </part>
-<part name="U$3" library="maka-niu" deviceset="CHARGING_COIL" device=""/>
+<part name="COIL" library="maka-niu" deviceset="CHARGING_COIL" device=""/>
 <part name="GND1" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 <part name="C10" library="maka-niu" deviceset="C0603" device="C0603W" value="10uF">
 <attribute name="DIGI-KEY_PART_NUMBER" value="445-9015-1-ND"/>
@@ -11842,8 +11842,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 </spice>
 <attribute name="DIGI-KEY_PART_NUMBER" value="732-7556-1-ND"/>
 <attribute name="MF" value="Würth Elektronik"/>
-<attribute name="MP" value="885012205061
-"/>
+<attribute name="MP" value="885012205061 "/>
 </part>
 <part name="C5" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0402" package3d_urn="urn:adsk.eagle:package:23626/2" value="22nF/50V">
 <spice>
@@ -12269,7 +12268,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <attribute name="MP" x="30.48" y="101.6" size="1.27" layer="96" display="off"/>
 <attribute name="DIGI-KEY_PART_NUMBER" x="30.48" y="101.6" size="1.27" layer="96" display="off"/>
 </instance>
-<instance part="U$3" gate="G$1" x="-12.7" y="66.04" smashed="yes">
+<instance part="COIL" gate="G$1" x="-12.7" y="66.04" smashed="yes">
 <attribute name="NAME" x="-11.43" y="68.58" size="1.778" layer="95" font="vector"/>
 <attribute name="VALUE" x="-11.43" y="63.5" size="1.778" layer="96" font="vector" align="top-left"/>
 </instance>
@@ -13347,7 +13346,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <segment>
 <pinref part="U1" gate="Q$1" pin="AC2"/>
 <wire x1="45.72" y1="55.88" x2="43.18" y2="55.88" width="0.1524" layer="91"/>
-<pinref part="U$3" gate="G$1" pin="2"/>
+<pinref part="COIL" gate="G$1" pin="2"/>
 <wire x1="43.18" y1="55.88" x2="27.94" y2="55.88" width="0.1524" layer="91"/>
 <wire x1="27.94" y1="55.88" x2="17.78" y2="55.88" width="0.1524" layer="91"/>
 <wire x1="17.78" y1="55.88" x2="5.08" y2="55.88" width="0.1524" layer="91"/>
@@ -13413,7 +13412,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 </net>
 <net name="LC" class="0">
 <segment>
-<pinref part="U$3" gate="G$1" pin="1"/>
+<pinref part="COIL" gate="G$1" pin="1"/>
 <wire x1="-7.62" y1="76.2" x2="-12.7" y2="76.2" width="0.1524" layer="91"/>
 <wire x1="-12.7" y1="76.2" x2="-12.7" y2="71.12" width="0.1524" layer="91"/>
 <pinref part="C5" gate="G$1" pin="1"/>
