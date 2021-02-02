@@ -8,7 +8,7 @@
 </settings>
 <grid distance="1" unitdist="mm" unit="mm" style="lines" multiple="1" display="yes" altdistance="0.1" altunitdist="mm" altunit="mm"/>
 <layers>
-<layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
+<layer number="1" name="Top" color="4" fill="1" visible="no" active="yes"/>
 <layer number="2" name="Route2" color="16" fill="1" visible="no" active="yes"/>
 <layer number="3" name="Route3" color="17" fill="1" visible="no" active="yes"/>
 <layer number="4" name="Route4" color="18" fill="1" visible="no" active="no"/>
@@ -30,8 +30,8 @@
 <layer number="20" name="Dimension" color="24" fill="1" visible="yes" active="yes"/>
 <layer number="21" name="tPlace" color="7" fill="1" visible="no" active="yes"/>
 <layer number="22" name="bPlace" color="7" fill="1" visible="yes" active="yes"/>
-<layer number="23" name="tOrigins" color="15" fill="1" visible="no" active="yes"/>
-<layer number="24" name="bOrigins" color="15" fill="1" visible="yes" active="yes"/>
+<layer number="23" name="tOrigins" color="15" fill="1" visible="yes" active="yes"/>
+<layer number="24" name="bOrigins" color="15" fill="1" visible="no" active="yes"/>
 <layer number="25" name="tNames" color="7" fill="1" visible="no" active="yes"/>
 <layer number="26" name="bNames" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="27" name="tValues" color="7" fill="1" visible="no" active="yes"/>
@@ -55,11 +55,11 @@
 <layer number="45" name="Holes" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="46" name="Milling" color="3" fill="1" visible="no" active="yes"/>
 <layer number="47" name="Measures" color="7" fill="1" visible="no" active="yes"/>
-<layer number="48" name="Document" color="7" fill="1" visible="yes" active="yes"/>
+<layer number="48" name="Document" color="7" fill="1" visible="no" active="yes"/>
 <layer number="49" name="Reference" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="50" name="dxf" color="7" fill="1" visible="no" active="no"/>
 <layer number="51" name="tDocu" color="7" fill="1" visible="no" active="yes"/>
-<layer number="52" name="bDocu" color="7" fill="1" visible="yes" active="yes"/>
+<layer number="52" name="bDocu" color="7" fill="1" visible="no" active="yes"/>
 <layer number="53" name="tGND_GNDA" color="7" fill="9" visible="no" active="no"/>
 <layer number="54" name="bGND_GNDA" color="1" fill="9" visible="no" active="no"/>
 <layer number="56" name="wert" color="7" fill="1" visible="no" active="no"/>
@@ -178,35 +178,41 @@
 <circle x="13" y="22" radius="6.2905" width="0.1016" layer="51"/>
 <circle x="13" y="22" radius="9.1845" width="0.1016" layer="51"/>
 <wire x1="13" y1="22" x2="9.8" y2="13.4" width="0.268" layer="51"/>
-<text x="17.8" y="2.1" size="0.3048" layer="26" font="vector" rot="MR340" align="bottom-center">TX</text>
-<text x="17" y="1.8" size="0.3048" layer="26" font="vector" rot="MR340" align="bottom-center">RX</text>
-<text x="13" y="25.3" size="0.3048" layer="21" font="vector" align="top-center">Maka-Niu Charging/Sensing v1.0
-Open Oceans 2020</text>
-<circle x="15.4" y="15.1" radius="0.4472125" width="0.1524" layer="22"/>
-<circle x="15.4" y="15.1" radius="0.08" width="0.1524" layer="22"/>
-<wire x1="15.4" y1="15.5" x2="15.4" y2="16.7" width="0.1524" layer="22"/>
-<wire x1="14.9" y1="15.1" x2="13.8" y2="15.1" width="0.1524" layer="22"/>
-<wire x1="13.8" y1="15.1" x2="14.2" y2="15.5" width="0.1524" layer="22"/>
-<wire x1="13.8" y1="15.1" x2="14.2" y2="14.7" width="0.1524" layer="22"/>
-<wire x1="15.4" y1="16.7" x2="15.8" y2="16.3" width="0.1524" layer="22"/>
-<wire x1="15.4" y1="16.7" x2="15" y2="16.3" width="0.1524" layer="22"/>
-<text x="15.8" y="16.1" size="0.3048" layer="22" font="vector" rot="MR0" align="top-center">+Y</text>
-<text x="14.6" y="15.5" size="0.3048" layer="22" font="vector" rot="MR0" align="top-center">+X</text>
-<text x="15.4" y="14.5" size="0.3048" layer="22" font="vector" rot="MR0" align="top-center">+Z</text>
-<text x="15.4" y="17.2" size="0.3048" layer="22" font="vector" rot="MR0" align="top-center">ACC/GYR</text>
-<circle x="13.1" y="16.4" radius="0.4472125" width="0.1524" layer="22"/>
-<wire x1="13.1" y1="15.9" x2="13.1" y2="14.7" width="0.1524" layer="22"/>
-<wire x1="12.6" y1="16.4" x2="11.5" y2="16.4" width="0.1524" layer="22"/>
-<wire x1="11.5" y1="16.4" x2="11.9" y2="16.8" width="0.1524" layer="22"/>
-<wire x1="11.5" y1="16.4" x2="11.9" y2="16" width="0.1524" layer="22"/>
-<wire x1="13.1" y1="14.7" x2="12.7" y2="15.1" width="0.1524" layer="22"/>
-<wire x1="13.1" y1="14.7" x2="13.5" y2="15.1" width="0.1524" layer="22"/>
-<text x="12.7" y="15.6" size="0.3048" layer="22" font="vector" rot="MR0" align="top-center">+Y</text>
-<text x="12.3" y="16.8" size="0.3048" layer="22" font="vector" rot="MR0" align="top-center">+X</text>
-<text x="13.9" y="16.6" size="0.3048" layer="22" font="vector" rot="MR0" align="top-center">+Z</text>
-<text x="13.1" y="17.3" size="0.3048" layer="22" font="vector" rot="MR0" align="top-center">MAG</text>
-<wire x1="13.4" y1="16.7" x2="12.8" y2="16.1" width="0.1524" layer="22"/>
-<wire x1="12.8" y1="16.7" x2="13.4" y2="16.1" width="0.1524" layer="22"/>
+<text x="20" y="2.3" size="0.78" layer="26" font="vector" rot="MR340" align="bottom-center">TX</text>
+<text x="15.1" y="0.5" size="0.78" layer="26" font="vector" rot="MR340" align="bottom-center">RX</text>
+<text x="13" y="25.2" size="0.78" layer="21" font="vector" align="top-center">Maka-Niu C/Sv1.1</text>
+<circle x="15.5" y="15.2" radius="0.4472125" width="0.1524" layer="22"/>
+<circle x="15.5" y="15.2" radius="0.08" width="0.1524" layer="22"/>
+<wire x1="15.5" y1="15.6" x2="15.5" y2="16.8" width="0.1524" layer="22"/>
+<wire x1="15" y1="15.2" x2="13.9" y2="15.2" width="0.1524" layer="22"/>
+<wire x1="13.9" y1="15.2" x2="14.3" y2="15.6" width="0.1524" layer="22"/>
+<wire x1="13.9" y1="15.2" x2="14.3" y2="14.8" width="0.1524" layer="22"/>
+<wire x1="15.5" y1="16.8" x2="15.9" y2="16.4" width="0.1524" layer="22"/>
+<wire x1="15.5" y1="16.8" x2="15.1" y2="16.4" width="0.1524" layer="22"/>
+<text x="16.6" y="16.8" size="0.78" layer="22" font="vector" rot="MR0" align="top-center">+Y</text>
+<text x="14.2" y="16.4" size="0.78" layer="22" font="vector" rot="MR0" align="top-center">+X</text>
+<text x="15.6" y="14.6" size="0.78" layer="22" font="vector" distance="0" rot="MR0" align="top-center">+Z</text>
+<text x="15.5" y="18.7" size="0.78" layer="22" font="vector" distance="20" rot="MR0" align="top-center">ACC/
+GYR</text>
+<circle x="13.2" y="8.6" radius="0.4472125" width="0.1524" layer="22"/>
+<wire x1="13.2" y1="8.1" x2="13.2" y2="6.9" width="0.1524" layer="22"/>
+<wire x1="12.7" y1="8.6" x2="11.6" y2="8.6" width="0.1524" layer="22"/>
+<wire x1="11.6" y1="8.6" x2="12" y2="9" width="0.1524" layer="22"/>
+<wire x1="11.6" y1="8.6" x2="12" y2="8.2" width="0.1524" layer="22"/>
+<wire x1="13.2" y1="6.9" x2="12.8" y2="7.3" width="0.1524" layer="22"/>
+<wire x1="13.2" y1="6.9" x2="13.6" y2="7.3" width="0.1524" layer="22"/>
+<text x="12.2" y="7.5" size="0.78" layer="22" font="vector" rot="MR0" align="top-center">+Y</text>
+<text x="12" y="9.9" size="0.78" layer="22" font="vector" rot="MR0" align="top-center">+X</text>
+<text x="14.2" y="9.8" size="0.78" layer="22" font="vector" rot="MR0" align="top-center">+Z</text>
+<text x="13.2" y="6.7" size="0.78" layer="22" font="vector" rot="MR0" align="top-center">MAG</text>
+<wire x1="13.5" y1="8.9" x2="12.9" y2="8.3" width="0.1524" layer="22"/>
+<wire x1="12.9" y1="8.9" x2="13.5" y2="8.3" width="0.1524" layer="22"/>
+<text x="1" y="12" size="0.78" layer="21" font="vector" rot="R275" align="top-center">KELLER</text>
+<text x="12" y="20" size="0.78" layer="22" font="vector" rot="MR0" align="bottom-center">Maka-Niu
+Charging/
+Sensing v1.1
+Open Oceans
+2021</text>
 </plain>
 <libraries>
 <library name="maka-niu">
@@ -312,12 +318,12 @@ Open Oceans 2020</text>
 <description>Wireless charging coil</description>
 <pad name="B1" x="-1.4" y="0" drill="1"/>
 <pad name="B2" x="1.4" y="0" drill="1"/>
-<wire x1="-2.5" y1="-1" x2="2.5" y2="-1" width="0.127" layer="21"/>
-<wire x1="2.5" y1="-1" x2="2.5" y2="1" width="0.127" layer="21"/>
-<wire x1="2.5" y1="1" x2="-2.5" y2="1" width="0.127" layer="21"/>
-<wire x1="-2.5" y1="1" x2="-2.5" y2="-1" width="0.127" layer="21"/>
-<text x="-2.5" y="1.2" size="0.6096" layer="21" font="vector">&gt;NAME</text>
-<text x="-2.5" y="-1.7" size="0.6096" layer="21" font="vector">&gt;VALUE</text>
+<text x="0" y="1.0668" size="0.6096" layer="25" font="vector" align="bottom-center">&gt;NAME</text>
+<text x="0" y="-1.0668" size="0.6096" layer="27" font="vector" align="top-center">&gt;VALUE</text>
+<wire x1="-1.397" y1="0.889" x2="-1.397" y2="-0.889" width="0.127" layer="21" curve="180"/>
+<wire x1="1.397" y1="0.889" x2="1.27" y2="-0.889" width="0.127" layer="21" curve="-188.130102"/>
+<wire x1="-1.397" y1="0.889" x2="1.397" y2="0.889" width="0.127" layer="21"/>
+<wire x1="-1.397" y1="-0.889" x2="1.397" y2="-0.889" width="0.127" layer="21"/>
 </package>
 <package name="CSP52_2P64X3P94_0P4MM_03MMPAD">
 <description>52-Ball, Wafer Level Chip Scale Package (WLCSP)</description>
@@ -493,7 +499,7 @@ Open Oceans 2020</text>
 </package>
 <package name="XM1110_GPS">
 <description>AirPrime XM1110 GPS</description>
-<circle x="-5.5" y="3.9" radius="0.2286" width="0.4572" layer="21"/>
+<circle x="-5.334" y="3.302" radius="0.1016" width="0.4572" layer="21"/>
 <wire x1="-4.75" y1="-4.5" x2="4.75" y2="-4.5" width="0.127" layer="51"/>
 <wire x1="4.75" y1="-4.5" x2="4.75" y2="4.5" width="0.127" layer="51"/>
 <wire x1="4.75" y1="4.5" x2="-4.75" y2="4.5" width="0.127" layer="51"/>
@@ -518,11 +524,11 @@ Open Oceans 2020</text>
 <smd name="18" x="0" y="4" dx="0.8" dy="0.7" layer="1" rot="R270"/>
 <smd name="19" x="-1.2" y="4" dx="0.8" dy="0.7" layer="1" rot="R270"/>
 <smd name="20" x="-2.4" y="4" dx="0.8" dy="0.7" layer="1" rot="R270"/>
-<text x="-3.6" y="1.93" size="1.27" layer="51" ratio="15">1</text>
+<text x="-3.6" y="1.93" size="1.27" layer="21" ratio="15">1</text>
 <circle x="-3.75" y="3.42" radius="0.4" width="0.0762" layer="51"/>
 <circle x="-3.75" y="3.42" radius="0.22360625" width="0.0762" layer="51"/>
-<wire x1="-4.8" y1="4.5" x2="-2.7" y2="4.5" width="0.2032" layer="21"/>
-<wire x1="-4.8" y1="4.5" x2="-4.8" y2="1.9" width="0.2032" layer="21"/>
+<wire x1="4.8" y1="-4.5" x2="2.7" y2="-4.5" width="0.2032" layer="21"/>
+<wire x1="4.8" y1="-4.5" x2="4.8" y2="-1.9" width="0.2032" layer="21"/>
 <wire x1="4.8" y1="1.9" x2="4.8" y2="4.5" width="0.2032" layer="21"/>
 <wire x1="-4.8" y1="-1.9" x2="-4.8" y2="-4.5" width="0.2032" layer="21"/>
 <wire x1="2.7" y1="4.5" x2="4.8" y2="4.5" width="0.2032" layer="21"/>
@@ -533,9 +539,9 @@ Open Oceans 2020</text>
 <wire x1="3.75" y1="3.4" x2="3.75" y2="-3.4" width="0.0762" layer="39"/>
 <wire x1="3.75" y1="-3.4" x2="-3.75" y2="-3.4" width="0.0762" layer="39"/>
 <wire x1="-3.75" y1="-3.4" x2="-3.75" y2="3.4" width="0.0762" layer="39"/>
-<wire x1="2.691" y1="-4.523" x2="3.58" y2="-4.523" width="0.2032" layer="21"/>
-<wire x1="3.58" y1="-4.523" x2="4.723" y2="-3.38" width="0.2032" layer="21"/>
-<wire x1="4.723" y1="-3.38" x2="4.723" y2="-1.856" width="0.2032" layer="21"/>
+<wire x1="-2.691" y1="4.523" x2="-3.58" y2="4.523" width="0.2032" layer="21"/>
+<wire x1="-3.58" y1="4.523" x2="-4.723" y2="3.38" width="0.2032" layer="21"/>
+<wire x1="-4.723" y1="3.38" x2="-4.723" y2="1.856" width="0.2032" layer="21"/>
 </package>
 <package name="C_0603">
 <description>Original name &lt;b&gt;C_0603&lt;/b&gt;&lt;p&gt;</description>
@@ -2248,7 +2254,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-13296-1-ND" x="16" y="14" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="16" y="14" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="GRM155R71H333KE02D" x="16" y="14" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="15.645" y="15.135" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="15.645" y="15.055" size="0.6096" layer="25" font="vector"/>
 <attribute name="POPULARITY" value="18" x="-13.21" y="-20.29" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="-13.21" y="-20.29" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="15.145" y="14.695" size="0.254" layer="27" font="vector"/>
@@ -2257,21 +2263,21 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="445-9015-1-ND" x="10.4" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="TDK Corporation" x="10.4" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="C1608X5R1E106M080AC" x="10.4" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="10.565" y="5.165" size="0.4064" layer="25" font="vector" rot="R90"/>
+<attribute name="NAME" x="11.5" y="5.165" size="0.4064" layer="25" font="vector" rot="R90"/>
 <attribute name="VALUE" x="9.965" y="4.295" size="0.254" layer="27" font="vector"/>
 </element>
 <element name="C11" library="maka-niu" package="C_0603" value="10uF" x="9" y="5.6" smashed="yes" rot="R270">
 <attribute name="DIGI-KEY_PART_NUMBER" value="445-9015-1-ND" x="9" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="TDK Corporation" x="9" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="C1608X5R1E106M080AC" x="9" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="8.835" y="6.135" size="0.4064" layer="25" font="vector" rot="R270"/>
+<attribute name="NAME" x="7.835" y="6.135" size="0.4064" layer="25" font="vector" rot="R270"/>
 <attribute name="VALUE" x="8.565" y="4.295" size="0.254" layer="27" font="vector"/>
 </element>
 <element name="C12" library="rcl" library_urn="urn:adsk.eagle:library:334" package="C0402" package3d_urn="urn:adsk.eagle:package:23626/2" value="1uF" x="6.25" y="18.28" smashed="yes" rot="MR270">
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-1439-1-ND" x="6.25" y="18.28" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="MF" value="Yageo" x="6.25" y="18.28" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="MP" value="CC0402KRX5R6BB105" x="6.25" y="18.28" size="1.778" layer="28" rot="MR270" display="off"/>
-<attribute name="NAME" x="7.415" y="19.215" size="0.8128" layer="26" font="vector" rot="MR270"/>
+<attribute name="NAME" x="7.615" y="19.215" size="0.8128" layer="26" font="vector" rot="MR270"/>
 <attribute name="POPULARITY" value="18" x="6.25" y="18.28" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="6.25" y="18.28" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="VALUE" x="5.755" y="18.515" size="0.254" layer="28" font="vector" rot="MR270"/>
@@ -2280,16 +2286,16 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-1439-1-ND" x="19.05" y="22.8" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MF" value="Yageo" x="19.05" y="22.8" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MP" value="CC0402KRX5R6BB105" x="19.05" y="22.8" size="1.778" layer="28" rot="MR90" display="off"/>
-<attribute name="NAME" x="19.585" y="21.665" size="0.8128" layer="26" font="vector" rot="MR90"/>
+<attribute name="NAME" x="19.735" y="21.085" size="0.6" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="18" x="19.05" y="22.8" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="19.05" y="22.8" size="1.778" layer="28" rot="MR90" display="off"/>
-<attribute name="VALUE" x="18.345" y="22.465" size="0.254" layer="28" font="vector" rot="MR90"/>
+<attribute name="VALUE" x="19.235" y="23.945" size="0.254" layer="28" font="vector" rot="MR0"/>
 </element>
 <element name="C14" library="rcl" library_urn="urn:adsk.eagle:library:334" package="C0402" package3d_urn="urn:adsk.eagle:package:23626/2" value="47nF" x="9.1" y="10" smashed="yes" rot="R180">
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-10702-1-ND" x="9.1" y="10" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="9.1" y="10" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MP" value="GRM155R71H473KE14D" x="9.1" y="10" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="8.035" y="10.265" size="0.6096" layer="25" font="vector" rot="R180"/>
+<attribute name="NAME" x="7.735" y="10.265" size="0.6096" layer="25" font="vector" rot="R180"/>
 <attribute name="POPULARITY" value="18" x="-8.68" y="54.45" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="-8.68" y="54.45" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="VALUE" x="10.935" y="10.105" size="0.254" layer="27" font="vector" rot="R180"/>
@@ -2298,7 +2304,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-1439-1-ND" x="4.22" y="10.25" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MF" value="Yageo" x="4.22" y="10.25" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MP" value="CC0402KRX5R6BB105" x="4.22" y="10.25" size="1.778" layer="28" rot="MR0" display="off"/>
-<attribute name="NAME" x="5.055" y="8.885" size="0.8128" layer="26" font="vector" rot="MR0"/>
+<attribute name="NAME" x="5.355" y="8.785" size="0.78" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="18" x="4.22" y="10.25" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="4.22" y="10.25" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="VALUE" x="3.155" y="10.145" size="0.254" layer="28" font="vector" rot="MR0"/>
@@ -2307,7 +2313,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-16428-1-ND" x="9.4" y="8.9" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="9.4" y="8.9" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MP" value="GCM155R71H153JA55D" x="9.4" y="8.9" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="8.335" y="9.165" size="0.6096" layer="25" font="vector" rot="R180"/>
+<attribute name="NAME" x="7.735" y="9.165" size="0.6096" layer="25" font="vector" rot="R180"/>
 <attribute name="POPULARITY" value="18" x="-14.73" y="53.35" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="-14.73" y="53.35" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="VALUE" x="11.235" y="8.905" size="0.254" layer="27" font="vector" rot="R180"/>
@@ -2316,7 +2322,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-11917-1-ND" x="10.31" y="8.79" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="10.31" y="8.79" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MP" value="GRM155R61H104KE19D" x="10.31" y="8.79" size="1.778" layer="28" rot="MR0" display="off"/>
-<attribute name="NAME" x="11.245" y="7.425" size="0.8128" layer="26" font="vector" rot="MR0"/>
+<attribute name="NAME" x="10.545" y="7.425" size="0.78" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="18" x="10.31" y="8.79" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="10.31" y="8.79" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="VALUE" x="10.745" y="9.285" size="0.254" layer="28" font="vector" rot="MR0"/>
@@ -2325,16 +2331,16 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-1439-1-ND" x="16.7" y="7.8" size="1.778" layer="27" display="off"/>
 <attribute name="MF" value="Yageo" x="16.7" y="7.8" size="1.778" layer="27" display="off"/>
 <attribute name="MP" value="CC0402KRX5R6BB105" x="16.7" y="7.8" size="1.778" layer="27" display="off"/>
-<attribute name="NAME" x="17.765" y="7.535" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="15.665" y="7.065" size="0.6096" layer="25" font="vector" rot="R90"/>
 <attribute name="POPULARITY" value="18" x="33.21" y="-41.73" size="1.778" layer="27" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="33.21" y="-41.73" size="1.778" layer="27" display="off"/>
-<attribute name="VALUE" x="15.065" y="7.695" size="0.254" layer="27" font="vector"/>
+<attribute name="VALUE" x="16.465" y="7.695" size="0.254" layer="27" font="vector"/>
 </element>
 <element name="C19" library="rcl" library_urn="urn:adsk.eagle:library:334" package="C0201" package3d_urn="urn:adsk.eagle:package:23690/2" value="0.1uF" x="20.46" y="4.09" smashed="yes" rot="R180">
 <attribute name="DIGI-KEY_PART_NUMBER" value="445-7318-1-ND" x="20.46" y="4.09" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MF" value="TDK Corporation" x="20.46" y="4.09" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MP" value="C0603X5R1A104K030BC" x="20.46" y="4.09" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="21.095" y="3.855" size="0.6096" layer="25" font="vector" rot="R180"/>
+<attribute name="NAME" x="19.995" y="4.155" size="0.3048" layer="25" font="vector" rot="R180"/>
 <attribute name="POPULARITY" value="0" x="-32.88" y="38.38" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="-32.88" y="38.38" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="VALUE" x="21.695" y="4.195" size="0.254" layer="27" font="vector" rot="R180"/>
@@ -2343,7 +2349,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-6360-1-ND" x="17.1" y="14" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="17.1" y="14" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="GRM155R71H223KA12J" x="17.1" y="14" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="16.675" y="15.105" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="16.675" y="15.055" size="0.6096" layer="25" font="vector"/>
 <attribute name="POPULARITY" value="18" x="-12.11" y="-31.72" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="-12.11" y="-31.72" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="16.175" y="12.565" size="0.254" layer="27" font="vector"/>
@@ -2352,7 +2358,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-1439-1-ND" x="9.4" y="7.8" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MF" value="Yageo" x="9.4" y="7.8" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MP" value="CC0402KRX5R6BB105" x="9.4" y="7.8" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="8.335" y="8.065" size="0.6096" layer="25" font="vector" rot="R180"/>
+<attribute name="NAME" x="7.735" y="8.065" size="0.6096" layer="25" font="vector" rot="R180"/>
 <attribute name="POPULARITY" value="18" x="-12.19" y="57.33" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="-12.19" y="57.33" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="VALUE" x="11.035" y="8.005" size="0.254" layer="27" font="vector" rot="R180"/>
@@ -2361,14 +2367,14 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="445-9015-1-ND" x="17.1" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="TDK Corporation" x="17.1" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="C1608X5R1E106M080AC" x="17.1" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="17.265" y="5.165" size="0.4064" layer="25" font="vector" rot="R90"/>
+<attribute name="NAME" x="17.435" y="5.765" size="0.3" layer="25" font="vector" rot="R180"/>
 <attribute name="VALUE" x="16.665" y="3.795" size="0.254" layer="27" font="vector"/>
 </element>
 <element name="C22" library="maka-niu" package="C_0603" value="10uF" x="15.7" y="5.6" smashed="yes" rot="R270">
 <attribute name="DIGI-KEY_PART_NUMBER" value="445-9015-1-ND" x="15.7" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="TDK Corporation" x="15.7" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="C1608X5R1E106M080AC" x="15.7" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="15.865" y="5.165" size="0.4064" layer="25" font="vector" rot="R90"/>
+<attribute name="NAME" x="16.035" y="5.765" size="0.3" layer="25" font="vector" rot="R180"/>
 <attribute name="VALUE" x="15.265" y="3.795" size="0.254" layer="27" font="vector"/>
 </element>
 <element name="C23" library="rcl" library_urn="urn:adsk.eagle:library:334" package="C0201" package3d_urn="urn:adsk.eagle:package:23690/2" value="0.1uF" x="14.8" y="5.9" smashed="yes" rot="R270">
@@ -2384,7 +2390,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-1439-1-ND" x="6.64" y="7.15" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MF" value="Yageo" x="6.64" y="7.15" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MP" value="CC0402KRX5R6BB105" x="6.64" y="7.15" size="1.778" layer="28" rot="MR0" display="off"/>
-<attribute name="NAME" x="5.575" y="6.685" size="0.8128" layer="26" font="vector" rot="MR0"/>
+<attribute name="NAME" x="5.575" y="6.585" size="0.78" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="18" x="6.64" y="7.15" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="6.64" y="7.15" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="VALUE" x="8.275" y="7.045" size="0.254" layer="28" font="vector" rot="MR0"/>
@@ -2393,7 +2399,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-11917-1-ND" x="6.66" y="6.09" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="6.66" y="6.09" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MP" value="GRM155R61H104KE19D" x="6.66" y="6.09" size="1.778" layer="28" rot="MR0" display="off"/>
-<attribute name="NAME" x="9.495" y="5.625" size="0.8128" layer="26" font="vector" rot="MR0"/>
+<attribute name="NAME" x="9.495" y="5.625" size="0.78" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="18" x="6.66" y="6.09" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="6.66" y="6.09" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="VALUE" x="5.595" y="5.985" size="0.254" layer="28" font="vector" rot="MR0"/>
@@ -2402,7 +2408,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-6360-1-ND" x="18.2" y="14" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="18.2" y="14" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="GRM155R71H223KA12J" x="18.2" y="14" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="17.805" y="15.075" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="17.805" y="15.055" size="0.6096" layer="25" font="vector"/>
 <attribute name="POPULARITY" value="18" x="-11.01" y="-43.15" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="-11.01" y="-43.15" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="17.405" y="14.735" size="0.254" layer="27" font="vector"/>
@@ -2420,14 +2426,14 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="445-9015-1-ND" x="18.5" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="TDK Corporation" x="18.5" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="C1608X5R1E106M080AC" x="18.5" y="5.6" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="18.665" y="5.165" size="0.4064" layer="25" font="vector" rot="R90"/>
+<attribute name="NAME" x="18.835" y="5.765" size="0.3" layer="25" font="vector" rot="R180"/>
 <attribute name="VALUE" x="18.065" y="3.795" size="0.254" layer="27" font="vector"/>
 </element>
 <element name="C4" library="rcl" library_urn="urn:adsk.eagle:library:334" package="C0402" package3d_urn="urn:adsk.eagle:package:23626/2" value="1uF" x="23.79" y="15.63" smashed="yes" rot="MR195">
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-1439-1-ND" x="23.79" y="15.63" size="1.778" layer="28" rot="MR195" display="off"/>
 <attribute name="MF" value="Yageo" x="23.79" y="15.63" size="1.778" layer="28" rot="MR195" display="off"/>
 <attribute name="MP" value="CC0402KRX5R6BB105" x="23.79" y="15.63" size="1.778" layer="28" rot="MR195" display="off"/>
-<attribute name="NAME" x="21.76429375" y="16.59515" size="0.8128" layer="26" font="vector" rot="MR195"/>
+<attribute name="NAME" x="23.76429375" y="17.09515" size="0.78" layer="26" font="vector" rot="MR195"/>
 <attribute name="POPULARITY" value="18" x="23.79" y="15.63" size="1.778" layer="28" rot="MR195" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="23.79" y="15.63" size="1.778" layer="28" rot="MR195" display="off"/>
 <attribute name="VALUE" x="24.824740625" y="15.49301875" size="0.254" layer="28" font="vector" rot="MR195"/>
@@ -2445,16 +2451,16 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-10702-1-ND" x="16.9" y="10" size="1.778" layer="27" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="16.9" y="10" size="1.778" layer="27" display="off"/>
 <attribute name="MP" value="GRM155R71H473KE14D" x="16.9" y="10" size="1.778" layer="27" display="off"/>
-<attribute name="NAME" x="17.965" y="9.735" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="15.865" y="9.565" size="0.6096" layer="25" font="vector" rot="R90"/>
 <attribute name="POPULARITY" value="18" x="72.78" y="-29.37" size="1.778" layer="27" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="72.78" y="-29.37" size="1.778" layer="27" display="off"/>
-<attribute name="VALUE" x="14.965" y="9.895" size="0.254" layer="27" font="vector"/>
+<attribute name="VALUE" x="16.565" y="9.895" size="0.254" layer="27" font="vector"/>
 </element>
 <element name="C7" library="rcl" library_urn="urn:adsk.eagle:library:334" package="C0402" package3d_urn="urn:adsk.eagle:package:23626/2" value="0.1uF" x="18.44" y="17.61" smashed="yes" rot="MR15">
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-11917-1-ND" x="18.44" y="17.61" size="1.778" layer="28" rot="MR15" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="18.44" y="17.61" size="1.778" layer="28" rot="MR15" display="off"/>
 <attribute name="MP" value="GRM155R61H104KE19D" x="18.44" y="17.61" size="1.778" layer="28" rot="MR15" display="off"/>
-<attribute name="NAME" x="17.33641875" y="17.522375" size="0.8128" layer="26" font="vector" rot="MR15"/>
+<attribute name="NAME" x="19.13641875" y="18.022375" size="0.78" layer="26" font="vector" rot="MR15"/>
 <attribute name="POPULARITY" value="18" x="18.44" y="17.61" size="1.778" layer="28" rot="MR15" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="18.44" y="17.61" size="1.778" layer="28" rot="MR15" display="off"/>
 <attribute name="VALUE" x="20.288221875" y="16.917571875" size="0.254" layer="28" font="vector" rot="MR15"/>
@@ -2463,16 +2469,15 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-16428-1-ND" x="16.7" y="8.9" size="1.778" layer="27" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="16.7" y="8.9" size="1.778" layer="27" display="off"/>
 <attribute name="MP" value="GCM155R71H153JA55D" x="16.7" y="8.9" size="1.778" layer="27" display="off"/>
-<attribute name="NAME" x="17.765" y="8.635" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="15.665" y="8.565" size="0.6096" layer="25" font="vector" rot="R90"/>
 <attribute name="POPULARITY" value="18" x="78.93" y="-30.47" size="1.778" layer="27" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="78.93" y="-30.47" size="1.778" layer="27" display="off"/>
-<attribute name="VALUE" x="14.865" y="8.795" size="0.254" layer="27" font="vector"/>
+<attribute name="VALUE" x="16.365" y="8.795" size="0.254" layer="27" font="vector"/>
 </element>
 <element name="C9" library="rcl" library_urn="urn:adsk.eagle:library:334" package="C0402" package3d_urn="urn:adsk.eagle:package:23626/2" value="1nF" x="13.6" y="12.9" smashed="yes" rot="R180">
 <attribute name="DIGI-KEY_PART_NUMBER" value="732-7556-1-ND" x="13.6" y="12.9" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MF" value="Würth Elektronik" x="13.6" y="12.9" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="MP" value="885012205061
-" x="13.6" y="12.9" size="1.778" layer="27" rot="R180" display="off"/>
+<attribute name="MP" value="885012205061 " x="13.6" y="12.9" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="NAME" x="12.435" y="13.165" size="0.6096" layer="25" font="vector" rot="R180"/>
 <attribute name="POPULARITY" value="18" x="-33.39" y="47.19" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="SPICEPREFIX" value="C" x="-33.39" y="47.19" size="1.778" layer="27" rot="R180" display="off"/>
@@ -2482,7 +2487,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="1727-5209-1-ND" x="16.33" y="22.92" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="MF" value="Nexperia USA Inc." x="16.33" y="22.92" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="MP" value="PMEG4005AEA,115" x="16.33" y="22.92" size="1.778" layer="28" rot="MR270" display="off"/>
-<attribute name="NAME" x="16.568" y="22.92" size="0.6096" layer="26" font="vector" ratio="20" rot="MR270" align="bottom-center"/>
+<attribute name="NAME" x="15.98" y="25.468" size="0.6096" layer="26" font="vector" ratio="20" rot="MR180" align="bottom-center"/>
 <attribute name="PROD_ID" value="DIO-10955" x="81.1" y="-7.56" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="VALUE" x="15.192" y="22.92" size="0.3048" layer="28" font="vector" ratio="20" rot="MR270" align="top-center"/>
 </element>
@@ -2490,7 +2495,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="445-172898-1-ND" x="12" y="18.13" size="1.778" layer="28" rot="MR180" display="off"/>
 <attribute name="MF" value="TDK Corporation" x="12" y="18.13" size="1.778" layer="28" rot="MR180" display="off"/>
 <attribute name="MP" value="MPZ1608S601ATD25" x="12" y="18.13" size="1.778" layer="28" rot="MR180" display="off"/>
-<attribute name="NAME" x="14.1" y="18.468" size="0.6096" layer="26" font="vector" ratio="20" rot="MR180" align="bottom-center"/>
+<attribute name="NAME" x="12" y="19.368" size="0.6096" layer="26" font="vector" ratio="20" rot="MR180" align="bottom-center"/>
 <attribute name="PROD_ID" value="NDUC-07859" x="50.1" y="82.9" size="1.778" layer="28" rot="MR180" display="off"/>
 <attribute name="VALUE" x="12" y="17.192" size="0.4064" layer="28" font="vector" ratio="20" rot="MR180" align="top-center"/>
 </element>
@@ -2498,14 +2503,14 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="A144746CT-ND" x="5" y="14.5" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MF" value="TE Connectivity AMP Connectors" x="5" y="14.5" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MP" value="2337019-1" x="5" y="14.5" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="5.37" y="14.26" size="0.6096" layer="25" font="vector" ratio="20" rot="R180"/>
+<attribute name="NAME" x="7.27" y="13.76" size="0.6096" layer="25" font="vector" ratio="20" rot="R180"/>
 <attribute name="PROD_ID" value="CONN-09193" x="-31.83" y="34.82" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="SF_ID" value="WRL-09144" x="-31.83" y="34.82" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="VALUE" x="5.77" y="14.74" size="0.6096" layer="27" font="vector" ratio="20" rot="R180" align="top-left"/>
 </element>
 <element name="J2" library="maka-niu" package="WIRES_2MM_05" value="KELLER_BREAKOUT" x="2" y="12" smashed="yes" rot="R275">
 <attribute name="NAME" x="3.19543125" y="12.104584375" size="0.6096" layer="21" font="vector" rot="R275" align="bottom-center"/>
-<attribute name="VALUE" x="0.407609375" y="11.9256875" size="0.4064" layer="21" font="vector" rot="R275" align="bottom-center"/>
+<attribute name="VALUE" x="0.407609375" y="11.9256875" size="0.4064" layer="51" font="vector" rot="R275" align="bottom-center"/>
 </element>
 <element name="J3" library="maka-niu" package="WIRES_2MM_02SMD" value="GPS_PROG" x="17.06" y="2.77" smashed="yes" rot="MR340">
 <attribute name="NAME" x="16.949571875" y="3.097625" size="0.5" layer="22" font="vector" rot="MR340" align="bottom-center"/>
@@ -2515,9 +2520,9 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="490-14837-1-ND" x="4.19" y="15.63" size="1.778" layer="28" rot="MR180" display="off"/>
 <attribute name="MF" value="Murata Electronics" x="4.19" y="15.63" size="1.778" layer="28" rot="MR180" display="off"/>
 <attribute name="MP" value="LQG18HH33NJ00D" x="4.19" y="15.63" size="1.778" layer="28" rot="MR180" display="off"/>
-<attribute name="NAME" x="5.99" y="15.968" size="0.6096" layer="26" font="vector" ratio="20" rot="MR180" align="bottom-center"/>
+<attribute name="NAME" x="4.19" y="16.868" size="0.6096" layer="26" font="vector" ratio="20" rot="MR180" align="bottom-center"/>
 <attribute name="PROD_ID" value="NDUC-07874" x="25.78" y="80.4" size="1.778" layer="28" rot="MR180" display="off"/>
-<attribute name="VALUE" x="4.19" y="16.392" size="0.3048" layer="28" font="vector" ratio="20" rot="MR180" align="top-center"/>
+<attribute name="VALUE" x="4.19" y="14.992" size="0.3048" layer="28" font="vector" ratio="20" rot="MR180" align="top-center"/>
 </element>
 <element name="Q1" library="SparkFun-DiscreteSemi" package="SOT-416FL" value="20V/0.2A/8MHz/1.2Ω/1Vth" x="3.24" y="13.49" smashed="yes" rot="MR270">
 <attribute name="DIGI-KEY_PART_NUMBER" value="RE1C002UNTCLCT-ND" x="3.24" y="13.49" size="1.778" layer="28" rot="MR270" display="off"/>
@@ -2539,25 +2544,25 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="RMCF0402JT470RCT-ND" x="15.8" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="MF" value="Stackpole Electronics Inc." x="15.8" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="MP" value="RMCF0402JT470R" x="15.8" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
-<attribute name="NAME" x="16.165" y="6.035" size="0.8128" layer="26" font="vector" rot="MR270"/>
+<attribute name="NAME" x="15.665" y="5.365" size="0.2" layer="26" font="vector" rot="MR180"/>
 <attribute name="POPULARITY" value="34" x="15.8" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="15.8" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
-<attribute name="VALUE" x="15.465" y="4.405" size="0.254" layer="28" font="vector" rot="MR180"/>
+<attribute name="VALUE" x="15.465" y="6.405" size="0.254" layer="28" font="vector" rot="MR180"/>
 </element>
 <element name="R10" library="rcl" library_urn="urn:adsk.eagle:library:334" package="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="10k" x="18" y="5.3" smashed="yes" rot="MR90">
 <attribute name="DIGI-KEY_PART_NUMBER" value="RMCF0402JT10K0CT-ND" x="18" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MF" value="Stackpole Electronics Inc." x="18" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MP" value="RMCF0402JT10K0" x="18" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
-<attribute name="NAME" x="17.635" y="4.365" size="0.8128" layer="26" font="vector" rot="MR90"/>
+<attribute name="NAME" x="18.235" y="5.235" size="0.2" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="34" x="18" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="18" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
-<attribute name="VALUE" x="18.705" y="5.535" size="0.254" layer="28" font="vector" rot="MR270"/>
+<attribute name="VALUE" x="17.665" y="6.405" size="0.254" layer="28" font="vector" rot="MR180"/>
 </element>
 <element name="R13" library="rcl" library_urn="urn:adsk.eagle:library:334" package="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="5.1k" x="7.2" y="3.6" smashed="yes">
 <attribute name="DIGI-KEY_PART_NUMBER" value="CR0402-JW-512GLFCT-ND" x="7.2" y="3.6" size="1.778" layer="27" display="off"/>
 <attribute name="MF" value="Bourns Inc." x="7.2" y="3.6" size="1.778" layer="27" display="off"/>
 <attribute name="MP" value="CR0402-JW-512GLF" x="7.2" y="3.6" size="1.778" layer="27" display="off"/>
-<attribute name="NAME" x="6.465" y="3.335" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="4.165" y="3.335" size="0.6096" layer="25" font="vector"/>
 <attribute name="POPULARITY" value="34" x="64.35" y="-45.93" size="1.778" layer="27" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="64.35" y="-45.93" size="1.778" layer="27" display="off"/>
 <attribute name="VALUE" x="5.665" y="3.495" size="0.254" layer="27" font="vector"/>
@@ -2566,7 +2571,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="CR0402-JW-512GLFCT-ND" x="7.2" y="4.7" size="1.778" layer="27" display="off"/>
 <attribute name="MF" value="Bourns Inc." x="7.2" y="4.7" size="1.778" layer="27" display="off"/>
 <attribute name="MP" value="CR0402-JW-512GLF" x="7.2" y="4.7" size="1.778" layer="27" display="off"/>
-<attribute name="NAME" x="6.465" y="4.435" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="6.165" y="6.335" size="0.6096" layer="25" font="vector"/>
 <attribute name="POPULARITY" value="34" x="69.43" y="-44.83" size="1.778" layer="27" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="69.43" y="-44.83" size="1.778" layer="27" display="off"/>
 <attribute name="VALUE" x="5.665" y="4.595" size="0.254" layer="27" font="vector"/>
@@ -2575,21 +2580,21 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-10.0KHRCT-ND" x="21" y="14" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="MF" value="Yageo" x="21" y="14" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="MP" value="RC0603FR-0710KL" x="21" y="14" size="1.778" layer="27" rot="R90" display="off"/>
-<attribute name="NAME" x="21.265" y="13.265" size="0.6096" layer="25" font="vector" rot="R90"/>
-<attribute name="VALUE" x="21.215" y="15.525" size="0.254" layer="27" font="vector" rot="R180"/>
+<attribute name="NAME" x="21.735" y="15.965" size="0.6096" layer="25" font="vector" rot="R180"/>
+<attribute name="VALUE" x="21.315" y="14.125" size="0.254" layer="27" font="vector" rot="R180"/>
 </element>
 <element name="R16" library="maka-niu" package="R_0603" value="10k" x="23" y="14" smashed="yes" rot="R90">
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-10.0KHRCT-ND" x="23" y="14" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="MF" value="Yageo" x="23" y="14" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="MP" value="RC0603FR-0710KL" x="23" y="14" size="1.778" layer="27" rot="R90" display="off"/>
-<attribute name="NAME" x="23.265" y="13.265" size="0.6096" layer="25" font="vector" rot="R90"/>
-<attribute name="VALUE" x="23.235" y="15.505" size="0.254" layer="27" font="vector" rot="R180"/>
+<attribute name="NAME" x="23.735" y="15.965" size="0.6096" layer="25" font="vector" rot="R180"/>
+<attribute name="VALUE" x="23.335" y="14.105" size="0.254" layer="27" font="vector" rot="R180"/>
 </element>
 <element name="R17" library="rcl" library_urn="urn:adsk.eagle:library:334" package="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="10k" x="9.6" y="2.5" smashed="yes" rot="R180">
 <attribute name="DIGI-KEY_PART_NUMBER" value="541-10KATCT-ND" x="9.6" y="2.5" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MF" value="Vishay Dale" x="9.6" y="2.5" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MP" value="CRCW040210K0JNEDIF" x="9.6" y="2.5" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="10.335" y="2.765" size="0.6096" layer="25" font="vector" rot="R180"/>
+<attribute name="NAME" x="10.735" y="1.365" size="0.6096" layer="25" font="vector" rot="R180"/>
 <attribute name="POPULARITY" value="34" x="-17.07" y="57.11" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-17.07" y="57.11" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="VALUE" x="11.035" y="2.605" size="0.254" layer="27" font="vector" rot="R180"/>
@@ -2598,7 +2603,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="541-10KATCT-ND" x="7.4" y="2.5" size="1.778" layer="27" display="off"/>
 <attribute name="MF" value="Vishay Dale" x="7.4" y="2.5" size="1.778" layer="27" display="off"/>
 <attribute name="MP" value="CRCW040210K0JNEDIF" x="7.4" y="2.5" size="1.778" layer="27" display="off"/>
-<attribute name="NAME" x="6.665" y="2.235" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="7.165" y="1.335" size="0.6096" layer="25" font="vector"/>
 <attribute name="POPULARITY" value="34" x="39.15" y="-52.11" size="1.778" layer="27" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="39.15" y="-52.11" size="1.778" layer="27" display="off"/>
 <attribute name="VALUE" x="5.965" y="2.395" size="0.254" layer="27" font="vector"/>
@@ -2607,16 +2612,16 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="P36ADCT-ND" x="17" y="2.9" size="1.778" layer="27" display="off"/>
 <attribute name="MF" value="Panasonic Electronic Components" x="17" y="2.9" size="1.778" layer="27" display="off"/>
 <attribute name="MP" value="ERJ-P06J360V" x="17" y="2.9" size="1.778" layer="27" display="off"/>
-<attribute name="NAME" x="16.565" y="2.67" size="0.6096" layer="25" font="vector"/>
+<attribute name="NAME" x="16.565" y="1.47" size="0.6096" layer="25" font="vector"/>
 <attribute name="POPULARITY" value="85" x="75.42" y="-17.42" size="1.778" layer="27" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="75.42" y="-17.42" size="1.778" layer="27" display="off"/>
-<attribute name="VALUE" x="18.665" y="2.66" size="0.6096" layer="27" font="vector"/>
+<attribute name="VALUE" x="18.165" y="1.46" size="0.6096" layer="27" font="vector"/>
 </element>
 <element name="R23" library="rcl" library_urn="urn:adsk.eagle:library:334" package="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="10k" x="21.7" y="6" smashed="yes" rot="R90">
 <attribute name="DIGI-KEY_PART_NUMBER" value="541-10KATCT-ND" x="21.7" y="6" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="MF" value="Vishay Dale" x="21.7" y="6" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="MP" value="CRCW040210K0JNEDIF" x="21.7" y="6" size="1.778" layer="27" rot="R90" display="off"/>
-<attribute name="NAME" x="21.965" y="5.265" size="0.6096" layer="25" font="vector" rot="R90"/>
+<attribute name="NAME" x="22.765" y="5.265" size="0.6096" layer="25" font="vector" rot="R90"/>
 <attribute name="POPULARITY" value="34" x="76.31" y="42.83" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="76.31" y="42.83" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="VALUE" x="21.975" y="5.125" size="0.254" layer="27" font="vector" rot="R180"/>
@@ -2625,13 +2630,13 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="541-10KATCT-ND" x="23" y="10.4" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="Vishay Dale" x="23" y="10.4" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="CRCW040210K0JNEDIF" x="23" y="10.4" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="22.735" y="11.135" size="0.6096" layer="25" font="vector" rot="R270"/>
+<attribute name="NAME" x="23.435" y="11.135" size="0.6096" layer="25" font="vector" rot="R270"/>
 <attribute name="POPULARITY" value="34" x="-31.61" y="-31.51" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-31.61" y="-31.51" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="22.765" y="11.295" size="0.254" layer="27" font="vector"/>
 </element>
 <element name="R28" library="rcl" library_urn="urn:adsk.eagle:library:334" package="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="NP" x="23" y="8.2" smashed="yes" rot="R270">
-<attribute name="NAME" x="22.735" y="8.935" size="0.6096" layer="25" font="vector" rot="R270"/>
+<attribute name="NAME" x="23.435" y="9.035" size="0.6096" layer="25" font="vector" rot="R270"/>
 <attribute name="POPULARITY" value="34" x="-31.61" y="-38.79" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-31.61" y="-38.79" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="22.865" y="7.115" size="0.254" layer="27" font="vector"/>
@@ -2640,7 +2645,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="541-10KATCT-ND" x="21.7" y="10.4" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="Vishay Dale" x="21.7" y="10.4" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="CRCW040210K0JNEDIF" x="21.7" y="10.4" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="21.435" y="11.135" size="0.6096" layer="25" font="vector" rot="R270"/>
+<attribute name="NAME" x="22.035" y="11.135" size="0.6096" layer="25" font="vector" rot="R270"/>
 <attribute name="POPULARITY" value="34" x="-32.91" y="-41.67" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-32.91" y="-41.67" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="21.385" y="11.335" size="0.254" layer="27" font="vector"/>
@@ -2649,13 +2654,13 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="RMCF0402JT470RCT-ND" x="16.9" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="MF" value="Stackpole Electronics Inc." x="16.9" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="MP" value="RMCF0402JT470R" x="16.9" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
-<attribute name="NAME" x="17.265" y="5.935" size="0.8128" layer="26" font="vector" rot="MR270"/>
+<attribute name="NAME" x="16.765" y="5.365" size="0.2" layer="26" font="vector" rot="MR180"/>
 <attribute name="POPULARITY" value="34" x="16.9" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="16.9" y="5.3" size="1.778" layer="28" rot="MR270" display="off"/>
-<attribute name="VALUE" x="16.665" y="4.405" size="0.254" layer="28" font="vector" rot="MR180"/>
+<attribute name="VALUE" x="16.665" y="6.405" size="0.254" layer="28" font="vector" rot="MR180"/>
 </element>
 <element name="R30" library="rcl" library_urn="urn:adsk.eagle:library:334" package="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="NP" x="21.7" y="8.2" smashed="yes" rot="R270">
-<attribute name="NAME" x="21.435" y="8.935" size="0.6096" layer="25" font="vector" rot="R270"/>
+<attribute name="NAME" x="22.06" y="9.035" size="0.6096" layer="25" font="vector" rot="R270"/>
 <attribute name="POPULARITY" value="34" x="-32.91" y="-48.95" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-32.91" y="-48.95" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="21.565" y="7.095" size="0.254" layer="27" font="vector"/>
@@ -2664,7 +2669,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="311-39.2KLBCT-ND" x="20.3" y="10.4" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="Yageo" x="20.3" y="10.4" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="AC0402FR-0739K2L" x="20.3" y="10.4" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="20.035" y="11.135" size="0.6096" layer="25" font="vector" rot="R270"/>
+<attribute name="NAME" x="20.635" y="11.135" size="0.6096" layer="25" font="vector" rot="R270"/>
 <attribute name="POPULARITY" value="34" x="-24.15" y="-20.08" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-24.15" y="-20.08" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="19.835" y="11.265" size="0.254" layer="27" font="vector"/>
@@ -2673,7 +2678,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="541-10KATCT-ND" x="20.3" y="6" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="MF" value="Vishay Dale" x="20.3" y="6" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="MP" value="CRCW040210K0JNEDIF" x="20.3" y="6" size="1.778" layer="27" rot="R90" display="off"/>
-<attribute name="NAME" x="20.565" y="5.265" size="0.6096" layer="25" font="vector" rot="R90"/>
+<attribute name="NAME" x="19.865" y="5.265" size="0.6096" layer="25" font="vector" rot="R90"/>
 <attribute name="POPULARITY" value="34" x="74.91" y="68.23" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="74.91" y="68.23" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="VALUE" x="19.995" y="4.885" size="0.254" layer="27" font="vector"/>
@@ -2682,7 +2687,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="541-10KATCT-ND" x="20.3" y="8.2" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MF" value="Vishay Dale" x="20.3" y="8.2" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="MP" value="CRCW040210K0JNEDIF" x="20.3" y="8.2" size="1.778" layer="27" rot="R270" display="off"/>
-<attribute name="NAME" x="20.035" y="8.935" size="0.6096" layer="25" font="vector" rot="R270"/>
+<attribute name="NAME" x="20.66" y="9.035" size="0.6096" layer="25" font="vector" rot="R270"/>
 <attribute name="POPULARITY" value="34" x="-39.39" y="-8.31" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-39.39" y="-8.31" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="20.065" y="7.075" size="0.254" layer="27" font="vector"/>
@@ -2691,7 +2696,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="541-10KATCT-ND" x="9.6" y="3.6" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MF" value="Vishay Dale" x="9.6" y="3.6" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MP" value="CRCW040210K0JNEDIF" x="9.6" y="3.6" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="10.335" y="3.865" size="0.6096" layer="25" font="vector" rot="R180"/>
+<attribute name="NAME" x="12.035" y="3.365" size="0.6096" layer="25" font="vector" rot="R180"/>
 <attribute name="POPULARITY" value="34" x="-11.99" y="63.29" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-11.99" y="63.29" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="VALUE" x="11.035" y="3.705" size="0.254" layer="27" font="vector" rot="R180"/>
@@ -2700,7 +2705,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="RMCF0402JT1K00CT-ND" x="17.79" y="22.78" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MF" value="Stackpole Electronics Inc." x="17.79" y="22.78" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MP" value="RMCF0402JT1K00" x="17.79" y="22.78" size="1.778" layer="28" rot="MR90" display="off"/>
-<attribute name="NAME" x="18.355" y="23.625" size="0.8128" layer="26" font="vector" rot="MR0"/>
+<attribute name="NAME" x="18.355" y="23.625" size="0.78" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="34" x="17.79" y="22.78" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="17.79" y="22.78" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="VALUE" x="17.955" y="21.685" size="0.254" layer="28" font="vector" rot="MR0"/>
@@ -2709,7 +2714,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="RMCF0402JT4K70CT-ND" x="19.9" y="4.1" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MF" value="Stackpole Electronics Inc." x="19.9" y="4.1" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MP" value="RMCF0402JT4K70" x="19.9" y="4.1" size="1.778" layer="28" rot="MR0" display="off"/>
-<attribute name="NAME" x="20.535" y="3.735" size="0.8128" layer="26" font="vector" rot="MR0"/>
+<attribute name="NAME" x="20.035" y="4.035" size="0.2" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="34" x="19.9" y="4.1" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="19.9" y="4.1" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="VALUE" x="19.835" y="3.395" size="0.254" layer="28" font="vector" rot="MR0"/>
@@ -2718,7 +2723,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="RMCF0402JT4K70CT-ND" x="19.9" y="5.2" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MF" value="Stackpole Electronics Inc." x="19.9" y="5.2" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MP" value="RMCF0402JT4K70" x="19.9" y="5.2" size="1.778" layer="28" rot="MR0" display="off"/>
-<attribute name="NAME" x="20.435" y="4.835" size="0.8128" layer="26" font="vector" rot="MR0"/>
+<attribute name="NAME" x="20.035" y="5.135" size="0.2" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="34" x="19.9" y="5.2" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="19.9" y="5.2" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="VALUE" x="19.835" y="5.695" size="0.254" layer="28" font="vector" rot="MR0"/>
@@ -2727,7 +2732,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="RMCF0402JT4K70CT-ND" x="6.47" y="13.61" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MF" value="Stackpole Electronics Inc." x="6.47" y="13.61" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MP" value="RMCF0402JT4K70" x="6.47" y="13.61" size="1.778" layer="28" rot="MR90" display="off"/>
-<attribute name="NAME" x="7.695" y="14.225" size="0.8128" layer="26" font="vector" rot="MR270"/>
+<attribute name="NAME" x="7.695" y="14.225" size="0.78" layer="26" font="vector" rot="MR270"/>
 <attribute name="POPULARITY" value="34" x="-43.06" y="60.6" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-43.06" y="60.6" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="VALUE" x="5.865" y="13.275" size="0.254" layer="28" font="vector" rot="MR90"/>
@@ -2736,7 +2741,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="RMCF0402JT4K70CT-ND" x="6.43" y="11.47" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MF" value="Stackpole Electronics Inc." x="6.43" y="11.47" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MP" value="RMCF0402JT4K70" x="6.43" y="11.47" size="1.778" layer="28" rot="MR90" display="off"/>
-<attribute name="NAME" x="6.865" y="10.835" size="0.8128" layer="26" font="vector" rot="MR90"/>
+<attribute name="NAME" x="6.865" y="11.035" size="0.78" layer="26" font="vector" rot="MR90"/>
 <attribute name="POPULARITY" value="34" x="-43.1" y="63.54" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="-43.1" y="63.54" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="VALUE" x="5.825" y="11.135" size="0.254" layer="28" font="vector" rot="MR90"/>
@@ -2745,25 +2750,25 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="RMCF0402JT10K0CT-ND" x="14.7" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MF" value="Stackpole Electronics Inc." x="14.7" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="MP" value="RMCF0402JT10K0" x="14.7" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
-<attribute name="NAME" x="14.335" y="4.665" size="0.8128" layer="26" font="vector" rot="MR90"/>
+<attribute name="NAME" x="14.835" y="5.235" size="0.2" layer="26" font="vector" rot="MR0"/>
 <attribute name="POPULARITY" value="34" x="14.7" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="14.7" y="5.3" size="1.778" layer="28" rot="MR90" display="off"/>
-<attribute name="VALUE" x="15.035" y="4.195" size="0.254" layer="28" font="vector" rot="MR0"/>
+<attribute name="VALUE" x="15.035" y="6.195" size="0.254" layer="28" font="vector" rot="MR0"/>
 </element>
 <element name="RTS" library="maka-niu" package="RS-2,5" package3d_urn="urn:adsk.eagle:package:30592/1" value="THERMISTOR-2,5" x="4.3" y="6.8" smashed="yes" rot="R90">
-<attribute name="NAME" x="5.652" y="6.76" size="0.6096" layer="25" font="vector" ratio="10" rot="R90"/>
+<attribute name="NAME" x="5.752" y="6.76" size="0.78" layer="25" font="vector" ratio="10" rot="R90"/>
 <attribute name="POPULARITY" value="0" x="23.35" y="58.87" size="1.778" layer="27" rot="R90" display="off"/>
-<attribute name="VALUE" x="5.956" y="5.68" size="0.254" layer="27" font="vector" ratio="10" rot="R90"/>
+<attribute name="VALUE" x="6.056" y="5.68" size="0.254" layer="27" font="vector" ratio="10" rot="R90"/>
 </element>
-<element name="U$3" library="maka-niu" package="CHARGING_COIL" value="CHARGING_COIL" x="10.3" y="14.8" smashed="yes" rot="R249.6">
-<attribute name="NAME" x="9.757959375" y="15.782790625" size="0.6096" layer="21" font="vector" rot="R249.6"/>
-<attribute name="VALUE" x="11.360653125" y="16.104615625" size="0.3048" layer="21" font="vector" rot="R249.6"/>
+<element name="COIL" library="maka-niu" package="CHARGING_COIL" value="CHARGING_COIL" x="10.3" y="14.8" smashed="yes" rot="R249.6">
+<attribute name="NAME" x="8.857959375" y="16.382790625" size="0.78" layer="25" font="vector" rot="R249.6"/>
+<attribute name="VALUE" x="12.060653125" y="15.904615625" size="0.3048" layer="27" font="vector" rot="R249.6"/>
 </element>
 <element name="U1" library="maka-niu" package="CSP52_2P64X3P94_0P4MM_03MMPAD" value="P9221-R03MM_PAD" x="13" y="6.75" smashed="yes" rot="R180">
 <attribute name="DIGI-KEY_PART_NUMBER" value="800-3932-2-ND" x="13" y="6.75" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MF" value="Renesas Electronics America Inc." x="13" y="6.75" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MP" value="P9221-RAHGI8" x="13" y="6.75" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="14.330959375" y="4.443678125" size="0.6096" layer="25" font="vector" ratio="13" rot="SR180"/>
+<attribute name="NAME" x="13.530959375" y="4.043678125" size="0.6096" layer="25" font="vector" ratio="13" rot="SR180"/>
 <attribute name="VALUE" x="14.833878125" y="9.607496875" size="0.6096" layer="27" font="vector" ratio="13" rot="SR180"/>
 </element>
 <element name="U2" library="maka-niu" package="XM1110_GPS" value="XM1110 GPS" x="20.06" y="10.98" smashed="yes" rot="MR285">
@@ -2778,7 +2783,7 @@ design rules under a new name.</description>
 <attribute name="DIGI-KEY_PART_NUMBER" value="1428-1123-1-ND" x="-7.64" y="-9" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MF" value="TDK InvenSense" x="-7.64" y="-9" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="MP" value="ICM-20948" x="-7.64" y="-9" size="1.778" layer="28" rot="MR0" display="off"/>
-<attribute name="NAME" x="15.223359375" y="15.133359375" size="0.6096" layer="26" font="vector" rot="MR0"/>
+<attribute name="NAME" x="11.523359375" y="14.533359375" size="0.6096" layer="26" font="vector" rot="MR0"/>
 <attribute name="PACKAGE" value="QFN-24 InvenSense" x="-7.64" y="-9" size="1.778" layer="28" rot="MR0" display="off"/>
 <attribute name="VALUE" x="15.021740625" y="9.977390625" size="0.6096" layer="28" font="vector" rot="MR0"/>
 </element>
@@ -2791,13 +2796,13 @@ design rules under a new name.</description>
 <attribute name="VALUE" x="8.03" y="8.92" size="0.254" layer="28" font="vector" ratio="20" rot="MR90" align="top-center"/>
 </element>
 <element name="R22" library="rcl" library_urn="urn:adsk.eagle:library:334" package="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="NP" x="19" y="8.8" smashed="yes" rot="R270">
-<attribute name="NAME" x="18.735" y="9.535" size="0.6096" layer="25" font="vector" rot="R270"/>
+<attribute name="NAME" x="18.735" y="11.735" size="0.78" layer="25" font="vector" rot="R270"/>
 <attribute name="POPULARITY" value="34" x="19" y="8.8" size="0.3048" layer="27" rot="R270" display="off"/>
 <attribute name="SPICEPREFIX" value="R" x="19" y="8.8" size="0.3048" layer="27" rot="R270" display="off"/>
-<attribute name="VALUE" x="17.095" y="9.435" size="1.27" layer="27" rot="R270"/>
+<attribute name="VALUE" x="18.765" y="7.695" size="0.254" layer="27"/>
 </element>
 <element name="TP1" library="testpad" library_urn="urn:adsk.eagle:library:385" package="B1,27" package3d_urn="urn:adsk.eagle:package:27944/2" value="TP_18V" x="8.1" y="16" smashed="yes" rot="MR0">
-<attribute name="NAME" x="8.77" y="16.851" size="0.6096" layer="26" font="vector" ratio="10" rot="MR0"/>
+<attribute name="NAME" x="8.97" y="16.751" size="0.6096" layer="26" font="vector" ratio="10" rot="MR0"/>
 <attribute name="POPULARITY" value="19" x="8.1" y="16" size="0.6096" layer="28" font="vector" rot="MR0" display="off"/>
 <attribute name="TP_SIGNAL_NAME" value="TP_18V" x="8.1" y="16" size="0.6096" layer="28" font="vector" rot="MR0" display="off"/>
 <attribute name="VALUE" x="8.67" y="15.003" size="0.254" layer="28" font="vector" rot="MR0"/>
@@ -3449,7 +3454,7 @@ design rules under a new name.</description>
 </signal>
 <signal name="AC2">
 <contactref element="U1" pad="G5"/>
-<contactref element="U$3" pad="B2"/>
+<contactref element="COIL" pad="B2"/>
 <contactref element="U1" pad="H5"/>
 <contactref element="U1" pad="H6"/>
 <contactref element="C9" pad="2"/>
@@ -3522,7 +3527,7 @@ design rules under a new name.</description>
 <wire x1="13.6" y1="7.95" x2="14" y2="7.95" width="0.268" layer="1"/>
 </signal>
 <signal name="LC">
-<contactref element="U$3" pad="B1"/>
+<contactref element="COIL" pad="B1"/>
 <contactref element="C5" pad="1"/>
 <contactref element="C1" pad="1"/>
 <contactref element="C3" pad="1"/>
