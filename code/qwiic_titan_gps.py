@@ -192,19 +192,21 @@ class QwiicTitanGps(object):
     _RPiCheck = False
 
     gnss_messages = {
-
         'Time'           : 0,
+        'Date'  	 : 0, #LUI-GI
+        'Status'  	 : "", #LUI-GI
         'Latitude'       : 0,
-        'Lat'            : 0,
-        'Lat_Direction'  : "",
+#        'Lat'            : 0,
+#        'Lat_Direction'  : "",
         'Longitude'      : 0,
-        'Long'           : 0,
-        'Long_Direction' : "",
-        'Altitude'       : 0,
-        'Altitude_Units' : "",
-        'Sat_Number'     : 0,
-        'Geo_Separation' : 0,
-        'Geo_Sep_Units'  : "",
+#        'Long'           : 0,
+#        'Long_Direction' : "",
+#        'Altitude'       : 0,
+#        'Altitude_Units' : "",
+#        'Sat_Number'     : 0,
+#        'Geo_Separation' : 0,
+#        'Geo_Sep_Units'  : "",
+
     }
 
     def __init__(self, address=None, i2c_driver=None):
@@ -355,18 +357,20 @@ class QwiicTitanGps(object):
 
         """
         try:
+            self.gnss_messages['Status'] = sentence.status
+            self.gnss_messages['Date'] = sentence.datestamp #LUI-GI
             self.gnss_messages['Time'] = sentence.timestamp
-            self.gnss_messages['Lat_Direction'] = sentence.lat_dir
-            self.gnss_messages['Long_Direction'] = sentence.lon_dir
+            #self.gnss_messages['Lat_Direction'] = sentence.lat_dir
+            #self.gnss_messages['Long_Direction'] = sentence.lon_dir
             self.gnss_messages['Latitude'] = sentence.latitude
-            self.gnss_messages['Lat'] = sentence.lat
+            #self.gnss_messages['Lat'] = sentence.lat
             self.gnss_messages['Longitude'] = sentence.longitude
-            self.gnss_messages['Long'] = sentence.lon
-            self.gnss_messages['Altitude'] = sentence.altitude
-            self.gnss_messages['Altitude_Units'] = sentence.altitude_units
-            self.gnss_messages['Sat_Number'] = sentence.num_sats
-            self.gnss_messages['Geo_Separation'] = sentence.geo_sep
-            self.gnss_messages['Geo_Sep_Units'] = sentence.geo_sep_units
+            #self.gnss_messages['Long'] = sentence.lon
+            #self.gnss_messages['Altitude'] = sentence.altitude
+            #self.gnss_messages['Altitude_Units'] = sentence.altitude_units
+            #self.gnss_messages['Sat_Number'] = sentence.num_sats
+            #self.gnss_messages['Geo_Separation'] = sentence.geo_sep
+            #self.gnss_messages['Geo_Sep_Units'] = sentence.geo_sep_units
         except KeyError:
             pass
         except AttributeError:

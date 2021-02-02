@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import datetime
 import time
 from time import sleep
 import os
@@ -29,7 +30,18 @@ def getBatteryVoltage(vref = 3.3):
    return pack_voltage
 
 
+
 ############################################################### SETUP
+#To avoid messing with clocks, we are creating a date time offset variable that will be used for timestamping 
+datetime_offset = datetime.timedelta(0)
+print(datetime.datetime.now())
+
+
+
+#setup a 60 seconds timer to disable HDMI output, that way for debug its still possible to connect a screen and end this program.
+hdmi_end_timer = time.time()
+hdmi_enabled = True
+
 #setup LED pwms pins for feedback
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(12, GPIO.OUT)
@@ -39,8 +51,6 @@ green = GPIO.PWM(13, 1000) #(pin, freq)
 
 #setup GPIO pin  that enables 3.3V regulator powering GPS, Keller, IMU.
 GPIO.setup(18, GPIO.OUT)
-#GPIO.output(18, GPIO.LOW) #can potentially set low to preserve a little power
-sleep(0.5)
 GPIO.output(18, GPIO.HIGH) #can potentially set low to preserve a little power
 sleep(0.5)
 
@@ -146,7 +156,7 @@ sys.stdout.flush()
 if adc_connected and gps_connected and keller_connected:
    print('ADC, GPS, and Keller hardware all talking.')
    green.start(100)
-sleep(3) #demanded by keller but also sued for all OK LED
+sleep(3) #demanded by keller but also used for all OK LED
 green.stop()
 
 
@@ -161,17 +171,20 @@ while True:
       if gps_connected and interface_rotation == 1 and hall_button_active==0: #gps takes a logn time and interferes with photo burst
          if gps.connected is True:
             if gps.get_nmea_data() is True:
-               #for k, v in gps.gnss_messages.items():
-               #   print(k, ":", v)
-               print("UTC time: {}\nSatelite count: {}\nlatitude: {}\nlongitude: {}\n".format(
-                  gps.gnss_messages["Time"],
-                  gps.gnss_messages["Sat_Number"],
-                  gps.gnss_messages["Latitude"],
-                  gps.gnss_messages["Longitude"],))
-               if gps.gnss_messages["Sat_Number"].isdigit():
-                  if int(gps.gnss_messages["Sat_Number"]) > 0:
-                     green.start(100)
+               if (gps.gnss_messages["Status"]) == 'A':
+                  green.start(100)
+                  print("Have Fix")
 
+                  #check that the date time stamps are in valid format, and if yes, use for local time update
+                  if isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
+                     datetime_gps = datetime.datetime.combine(gps.gnss_messages["Date"],gps.gnss_messages["Time"])
+                     datetime_offset = datetime_gps - datetime.datetime.now()
+
+               print("UTC Datetime: {} {}\nLatitude: {}\nLongitude: {}".format(
+                  gps.gnss_messages["Date"],
+                  gps.gnss_messages["Time"],
+                  gps.gnss_messages["Latitude"],
+                  gps.gnss_messages["Longitude"]))
 
       elif adc_connected and interface_rotation == 2:
          reading = getBatteryVoltage()
@@ -212,6 +225,14 @@ while True:
             print(e)
 
       interface_rotation %= 3
+
+   if hdmi_enabled == True and (time.time() - hdmi_end_timer > 60):
+      os.system('/usr/bin/tvservice -o')
+      os.system('echo none | sudo tee /sys/class/leds/led0/trigger')
+      os.system('echo 0 | sudo tee /sys/class/leds/led0/brightness')
+      print('*******60 seconds elapsed since start. HDMI and ACT LED disabled.*******')
+      hdmi_enabled = False
+
 
 # collect raw hall states, use 1 - GPIO, because they are pull up and active low.
    hall_button_last = hall_button_active
