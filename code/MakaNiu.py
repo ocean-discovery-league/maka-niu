@@ -155,8 +155,10 @@ sys.stdout.flush()
 
 if adc_connected and gps_connected and keller_connected:
    print('ADC, GPS, and Keller hardware all talking.')
+#red.start(100)
    green.start(100)
 sleep(3) #demanded by keller but also used for all OK LED
+#red.stop()
 green.stop()
 
 
@@ -246,7 +248,7 @@ while True:
 
 # determine overall overtime confidence in each hall sensor being active
    for x in range(6):
-      if(hall_active[x] and hall_confidence[x] < 50):
+      if(hall_active[x] and hall_confidence[x] < 25):
          hall_confidence[x] += 1
       elif (hall_active[x] == 0 and hall_confidence[x] > 0):
          hall_confidence[x] -= 1
@@ -255,9 +257,9 @@ while True:
    hall_mode_last = hall_mode
    hall_mode = 0
    for x in range(6):
-      if (hall_confidence[x] >= 30):
+      if (hall_confidence[x] >= 15):
          hall_mode = 1 + x
-   if (recording and hall_mode != 2):
+   if (recording and hall_mode != 6 and hall_mode!=2):
       hall_mode = 2
       end_recording_mode_changed_flag = 1
 
@@ -433,13 +435,13 @@ while True:
       red.stop()
       for x in range (2): #2 short then long flashes
          red.start(100)
+         sleep(0.05)
+         red.stop()
          sleep(0.1)
-         red.stop()
-         sleep(0.2)
          red.start(100)
-         sleep(0.4)
-         red.stop()
          sleep(0.2)
+         red.stop()
+         sleep(0.04)
       GPIO.cleanup()
       call("sudo shutdown -h now", shell=True)
       sys.exit()
