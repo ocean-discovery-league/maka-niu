@@ -32,6 +32,8 @@ def getBatteryVoltage(vref = 3.3):
 
 
 ############################################################### SETUP
+serial_number= "MKN0001"
+
 #To avoid messing with clocks, we are creating a date time offset variable that will be used for timestamping 
 datetime_offset = datetime.timedelta(0)
 print(datetime.datetime.now())
@@ -307,8 +309,11 @@ while True:
       if (hall_button_active != hall_button_last):
          if (hall_button_active and recording == 0):
             #BEGIN RECORDING
+            time_stamp = datetime.datetime.now()+datetime_offset
+            with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
+               print(serial_number,time_stamp.isoformat("_","milliseconds"), sep ='_' , end="", file=f)
             os.system('echo ca 1 > /var/www/html/FIFO')
-            print('Starting video capture now')
+            print('Starting video capture')
             sys.stdout.flush()
             if haptic_connected:
                drv.stop()
@@ -373,9 +378,8 @@ while True:
          sleep(0.15)
          #CAPTURE PHOTO
          time_stamp = datetime.datetime.now()+datetime_offset
-#         os.system('echo -n {} | sudo tee /dev/shm/mjpeg/user_annotate2.txt'.format(time_stamp.isoformat("_","milliseconds")))
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-            print(time_stamp.isoformat("_","milliseconds"), end="", file=f)
+            print(serial_number,time_stamp.isoformat("_","milliseconds"), sep ='_' , end="", file=f)
          os.system('echo im 1 > /var/www/html/FIFO')
          print('\nPhoto capture')
          sys.stdout.flush()
@@ -389,13 +393,10 @@ while True:
          #CAPTURE BURST
          time_stamp = datetime.datetime.now()+datetime_offset
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-            print(time_stamp.isoformat("_","milliseconds"), end="", file=f)
-         #os.system('echo -n {} | sudo tee /dev/shm/mjpeg/user_annotate.txt'.format(time_stamp.isoformat("_","milliseconds")))
-         #os.system('echo -n {} | sudo tee /dev/shm/mjpeg/user_annotate2.txt'.format(time_stamp))
+            print(serial_number,time_stamp.isoformat("_","milliseconds"), sep ='_' , end="", file=f)
          os.system('echo im 1 > /var/www/html/FIFO')
          print('*')
          sys.stdout.flush()
-         #sleep(0.25)
 
 
 
