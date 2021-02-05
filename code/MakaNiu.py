@@ -171,22 +171,25 @@ while True:
       t = time.time()
       interface_rotation +=1
       if gps_connected and interface_rotation == 1 and hall_button_active==0: #gps takes a logn time and interferes with photo burst
-         if gps.connected is True:
-            if gps.get_nmea_data() is True:
-               if (gps.gnss_messages["Status"]) == 'A':
-                  green.start(100)
-                  print("Have Fix")
+         try:
+            if gps.connected is True:
+               if gps.get_nmea_data() is True:
+                  if (gps.gnss_messages["Status"]) == 'A':
+                     green.start(100)
+                     print("Have Fix")
 
                   #check that the date time stamps are in valid format, and if yes, use for local time update
-                  if isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
-                     datetime_gps = datetime.datetime.combine(gps.gnss_messages["Date"],gps.gnss_messages["Time"])
-                     datetime_offset = datetime_gps - datetime.datetime.now()
+                     if isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
+                        datetime_gps = datetime.datetime.combine(gps.gnss_messages["Date"],gps.gnss_messages["Time"])
+                        datetime_offset = datetime_gps - datetime.datetime.now()
 
-               print("UTC Datetime: {} {}\nLatitude: {}\nLongitude: {}".format(
-                  gps.gnss_messages["Date"],
-                  gps.gnss_messages["Time"],
-                  gps.gnss_messages["Latitude"],
-                  gps.gnss_messages["Longitude"]))
+                  print("UTC Datetime: {} {}\nLatitude: {}\nLongitude: {}".format(
+                     gps.gnss_messages["Date"],
+                     gps.gnss_messages["Time"],
+                     gps.gnss_messages["Latitude"],
+                     gps.gnss_messages["Longitude"]))
+         except:
+            print("GPS error of some kind.")
 
       elif adc_connected and interface_rotation == 2:
          reading = getBatteryVoltage()
