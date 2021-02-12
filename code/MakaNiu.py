@@ -180,10 +180,18 @@ while True:
                      green.start(100)
                      print("Have Fix")
 
-                  #check that the date time stamps are in valid format, and if yes, use for local time update
+                     #check that the date time stamps are in valid format, and if yes, use for local time update
                      if isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
                         datetime_gps = datetime.datetime.combine(gps.gnss_messages["Date"],gps.gnss_messages["Time"])
                         datetime_offset = datetime_gps - datetime.datetime.now()
+
+                        #PRINT TO SENSOR FILE TEST
+                        if recording and sensor_file.closed == False:
+                           print("GNSS:{}_{}_{}".format(
+                              (datetime.datetime.now() + datetime_offset).isoformat(sep='_', timespec = 'seconds'),
+                              gps.gnss_messages["Latitude"],
+                              gps.gnss_messages["Longitude"]), file=sensor_file)
+                              #time_stamp = datetime.datetime.now()+datetime_offset
 
                   print("UTC Datetime: {} {}\nLatitude: {}\nLongitude: {}".format(
                      gps.gnss_messages["Date"],
@@ -198,6 +206,10 @@ while True:
          if reading < 15 and reading > 5:
             battery_volt = battery_volt*0.9 + reading*0.1
          print("Battery Pack at at %0.3f Volts" % (battery_volt))
+         if recording and sensor_file.closed == False:
+            print("BATT:{}_{:.2f}".format(
+               (datetime.datetime.now()+ datetime_offset).isoformat(sep='_',timespec='seconds'), 
+               battery_volt), file=sensor_file)
          if battery_volt < 9.0: #BATTERIES Dying!!!
             battery_low_counter +=1
             if battery_low_counter >=5:
@@ -226,8 +238,13 @@ while True:
       elif keller_connected and interface_rotation ==3:
          try:
             outside.read()
-            print("pressure: %7.4f bar \t estimated depth: %7.1f meters \t temperature: %0.2f C\n" % (outside.pressure(), outside.pressure()*10-10, outside.temperature()))
+            approx_depth = outside.pressure()*10+10
+            print("pressure: %7.4f bar \t estimated depth: %7.1f meters \t temperature: %0.2f C\n" % (outside.pressure(), approx_depth, outside.temperature()))
             sys.stdout.flush()
+            if recording and sensor_file.closed == False:
+               print("KELL:{}_P{:.2f}_D{:.1f}_T{:.2f}".format(
+               (datetime.datetime.now()+ datetime_offset).isoformat(sep='_',timespec='seconds'),
+               outside.pressure(), approx_depth, outside.temperature()), file=sensor_file)
          except Exception as e:
             print(e)
 
@@ -308,13 +325,17 @@ while True:
 
       if (hall_button_active != hall_button_last):
          if (hall_button_active and recording == 0):
-            #BEGIN RECORDING
+            #BEGIN RECORDING. 1st determine video file name, and create same named sensor data file
             time_stamp = datetime.datetime.now()+datetime_offset
+            filename = serial_number + "_" + time_stamp.isoformat("_","milliseconds")
             with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-               print(serial_number,time_stamp.isoformat("_","milliseconds"), sep ='_' , end="", file=f)
+               print(filename , end="", file=f)
+            sensor_file = open("/var/www/html/media/{}{}".format(filename,".txt"), 'w')
+            #sensor_file = open("{}{}".format(filename,".txt"), 'w')
             os.system('echo ca 1 > /var/www/html/FIFO')
             print('Starting video capture')
             sys.stdout.flush()
+
             if haptic_connected:
                drv.stop()
                drv.sequence[0] = adafruit_drv2605.Effect(74) #1
@@ -333,13 +354,17 @@ while True:
                drv.sequence[0] = adafruit_drv2605.Effect(74) #10 nice double
                drv.play()
             red.start(100)
+            #cleanup, clear recording flag and close the sensor data file
             recording = 0
+            sensor_file.close()
 
       if (end_recording_mode_changed_flag):
          #END RECORDING
          print('Left Camera mode, ending video capture')
          sys.stdout.flush()
+         #cleanup, clear recording flag and close the sensor data file
          recording = 0
+         sensor_file.close()
          end_recording_mode_changed_flag = 0
 
       if (recording and (time.time()-video_started_time) > 899):
