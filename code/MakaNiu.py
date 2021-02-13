@@ -34,9 +34,12 @@ def getBatteryVoltage(vref = 3.3):
 ############################################################### SETUP
 #control variables: change these as desired
 serial_number= "MKN0001"
+mission1_name = "M1"
+mission2_name = "M2"
 hdmi_act_led_timeout_seconds = 90
 battery_low_shutdown_timeout_seconds = 60
-video_timelimit_seconds = 60
+video_timelimit_seconds = 900 # 15 minutes
+
 
 #To avoid messing with pi's clock, we are creating a UTC datetime offset variable that will be used for timestamping filenames and sensor data
 datetime_offset = datetime.timedelta(0)
@@ -149,7 +152,7 @@ hall_mode_last = 0
 
 #other variables
 recording = 0 #when recording, this flah is set so that modes changes are limited /prevented
-end_recording_mode_changed_flag = 0 #flag to properly end video if mode changes
+end_processes_mode_changed_flag = 0 #flag to properly end videos and sensor data files when mode changes
 photo_burst_time = time.time() #to manage time delay between images in burst
 interface_rotation = 0 #alternate various i2c jobs and battery spi job to minimize delay
 video_started_time = time.time() # for limitign video to fixed max lentgh segments
@@ -203,8 +206,8 @@ while True:
 
                         #If data look valid, and we are recording or in a mission mode, write GPS data to the sensor file
                         if (recording or in_mission) and sensor_file.closed == False:
-                           print("GNSS:{}\t{}\t{}".format(
-                              (datetime.datetime.now() + datetime_offset).isoformat(sep='\t', timespec = 'milliseconds'),
+                           print("GNSS:{}\t{:.7f}\t{:.7f}".format(
+                              (datetime.datetime.now() + datetime_offset).isoformat(sep='\t', timespec = 'milliseconds').replace(':', '').replace('-', ''),
                               gps.gnss_messages["Latitude"],
                               gps.gnss_messages["Longitude"]), file=sensor_file)
 
@@ -229,7 +232,7 @@ while True:
          print("Battery Pack at at %0.3f Volts" % (battery_volt))
          if (recording or in_mission) and sensor_file.closed == False:
             print("BATT:{}\t{:.2f}".format(
-               (datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds'),
+               (datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':', '').replace('-', ''),
                battery_volt), file=sensor_file)
 
          #if the battery voltage is critically low, stop all interfaces and initiate a shutdown timeout. The shutdown timeout allows a user to intercept if necessary.
@@ -283,7 +286,7 @@ while True:
             sys.stdout.flush()
             if (recording or in_mission) and sensor_file.closed == False:
                print("KELL:{}\t{:.2f}\t{:.1f}\t{:.2f}".format(
-               (datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='seconds'),
+               (datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':', '').replace('-', ''),
                outside.pressure(), approx_depth, outside.temperature()), file=sensor_file)
          except Exception as e:
             print(e)
@@ -333,7 +336,7 @@ while True:
    #NOTE THIS MAY BE CLEANER AND EASIER TO DEBUG IF THE SITUATINS ARE HANDLED HERE
    if (recording and hall_mode != 6 and hall_mode!=2):
       hall_mode = hall_mode_last
-      end_recording_mode_changed_flag = 1
+      end_processes_mode_changed_flag = 1
 
 
 ####################################################################### MODES
@@ -423,7 +426,7 @@ while True:
             red.start(100)
 
       #This bit gets executed if the has been moved away from video mode while a recording was active
-      if (end_recording_mode_changed_flag):
+      if end_processes_mode_changed_flag:
          #end recordign via RPi interface
          os.system('echo ca 0 > /var/www/html/FIFO')
          print('Left Camera mode, ending video capture')
@@ -432,7 +435,7 @@ while True:
          #cleanup, clear recording flag and close the sensor data file
          recording = 0
          sensor_file.close()
-         end_recording_mode_changed_flag = 0
+         end_processes_mode_changed_flag = 0
 
          #there is no LED or haptic feedback in this scenario
 
@@ -547,9 +550,13 @@ while True:
 
    #Magnet at Mission 1
    if (hall_mode == 4):
-      #When initially entering mode: Disable wifi, do a long red flash, and buzz
+      #When initially entering mode: Disable wifi, do a long red flash, buzz, and create mission duration sensor data file
       if (hall_mode != hall_mode_last):
-         os.system('sudo ifconfig wlan0 down')
+         #set flag for mission number
+         in_mission = 1
+
+         #disable wifi
+         #os.system('sudo ifconfig wlan0 down')
          print('Mission 1 activated')
          sys.stdout.flush()
 
@@ -561,15 +568,43 @@ while True:
          sleep(0.75)
          red.stop()
 
-         #ADD CODE THAT WORKS WITH THE MISSION DATA
+         #At start of mission, determine time stamp, and create a mission sensor datafile.
+         time_stamp = datetime.datetime.now()+datetime_offset
+         filename = serial_number + "_" + mission1_name + "_" + time_stamp.isoformat("_","milliseconds")
+         sensor_file = open("/var/www/html/media/{}{}".format(filename,".txt"), 'w')
 
+     #CODE THAT READS FROM THE MISSION JSON FILE AND TAKES ACTION BASED ON THAT.
+     #******************************************************************
+     # whenever photo taken:
+       # name photo file serial number + mission name + datetime
+       # in the sensor data file, write ICAP:datetime \t image_filename
+     #whenever video started:
+       # name video file serial number + mission name + datetime
+       # in the sensor data file, write VCAP:datetime \t video_filename
+     #whenever video stopped:
+       # write to sensor file VSTP:datetime \t video_filename
+     #******************************************************************
+
+      #This executes if the dial was moved away from this mission. Close the sensor file, and terminate video capture.
+      elif end_processes_mode_changed_flag:
+         end_processes_mode_change_flag = 0
+         sensor_file.close()
+         if recording:
+            os.system('echo ca 0 > /var/www/html/FIFO')
+            print('Left Camera mode, ending video capture')
+            sys.stdout.flush()
+            recording = 0
 
 
    #Magnet at Mission 2 , flash  red then green twice.
    if (hall_mode == 5):
       #When initially entering mode: Disable wifi, do two long red led flashes, and buzz
       if (hall_mode != hall_mode_last):
-         os.system('sudo ifconfig wlan0 down')
+         #set flag for mission number
+         in_mission = 2
+
+         #disable wifi
+         #os.system('sudo ifconfig wlan0 down')
          print('Mission 2 activated')
          sys.stdout.flush()
 
@@ -585,10 +620,32 @@ while True:
          sleep(0.75)
          red.stop()
 
+         #At start of mission, determine time stamp, and create a mission sensor datafile.
+         time_stamp = datetime.datetime.now()+datetime_offset
+         filename = serial_number + "_" + mission2_name + "_" + time_stamp.isoformat("_","milliseconds")
+         sensor_file = open("/var/www/html/media/{}{}".format(filename,".txt"), 'w')
 
-         #ADD CODE THAT WORKS WITH THE MISSION DATA
+     #CODE THAT READS A LINE FROM THE MISSION JSON AND TAKEs ACTION BASED ON THAT.
+     #******************************************************************
+     # whenever photo taken:
+       # name photo file serial number + mission name + datetime
+       # in the sensor data file, write ICAP:datetime \t image_filename
+     #whenever video started:
+       # name video file serial number + mission name + datetime
+       # in the sensor data file, write VCAP:datetime \t video_filename
+     #whenever video stopped:
+       # write to sensor file VSTP:datetime \t video_filename
+     #******************************************************************
 
-
+      #This executes if the dial was moved away from this mission. Close the sensor file, and terminate video capture.
+      elif end_processes_mode_changed_flag:
+         end_processes_mode_change_flag = 0
+         sensor_file.close()
+         if recording:
+            os.system('echo ca 0 > /var/www/html/FIFO')
+            print('Left Camera mode, ending video capture')
+            sys.stdout.flush()
+            recording = 0
 
 
    #Magnet at Power Off.
@@ -609,8 +666,8 @@ while True:
          red.start(100)
          sleep(0.2)
          red.stop()
-         sleep(0.04)
-      GPIO.cleanup()
+         sleep(0.1)
+      #GPIO.cleanup()
       call("sudo shutdown -h now", shell=True)
       sys.exit()
 
