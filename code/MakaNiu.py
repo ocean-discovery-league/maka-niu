@@ -34,8 +34,8 @@ def getBatteryVoltage(vref = 3.3):
 ############################################################### SETUP
 #control variables: change these as desired
 serial_number= "MKN0001"
-mission1_name = "M1"
-mission2_name = "M2"
+mission1_name = "M1" #can be user specified
+mission2_name = "M2" #can be user specified
 hdmi_act_led_timeout_seconds = 90
 battery_low_shutdown_timeout_seconds = 60
 video_timelimit_seconds = 900 # 15 minutes
@@ -80,7 +80,7 @@ if battery_volt < 5 or battery_volt > 15:
    adc_connected = False
    battery_volt = 12
 
-#If the batteries are already depletred at start of runtime, iniate shutdown with a timeout to allow for user to intercept
+#If the batteries are already depleted at start of runtime, initiate shutdown with a timeout to allow for user to intercept
 if battery_volt < 9.0:
    print('Batteries critically low, initiating shutdown in 60 seconds.')
    sys.stdout.flush()
@@ -98,7 +98,6 @@ if battery_volt < 9.0:
    GPIO.cleanup()
    call("sudo shutdown -h now", shell=True)
    sys.exit()
-
 
 #setup i2c for haptic feedback
 #If there is a hardware issue, flag it and do not use the feature anymore this runtime.
@@ -132,7 +131,7 @@ except:
    keller_connected = False
    print("Keller LD sensor not connected.")
 
-#setup Hall sensor pins. All pulled up, so active is when low
+#setup hall sensor GPIO pins. All pulled up, so active is when low
 GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #push button
 GPIO.setup(11, GPIO.IN, pull_up_down = GPIO.PUD_UP) #wifi mode
 GPIO.setup(25, GPIO.IN, pull_up_down = GPIO.PUD_UP) #video mode
@@ -151,13 +150,21 @@ hall_mode = 0
 hall_mode_last = 0
 
 #other variables
-recording = 0 #when recording, this flah is set so that modes changes are limited /prevented
+recording = 0 #when recording, this flag is set so that modes changes are limited /prevented
 end_processes_mode_changed_flag = 0 #flag to properly end videos and sensor data files when mode changes
 photo_burst_time = time.time() #to manage time delay between images in burst
 interface_rotation = 0 #alternate various i2c jobs and battery spi job to minimize delay
-video_started_time = time.time() # for limitign video to fixed max lentgh segments
+video_started_time = time.time() # for limiting video to fixed max lentgh segments
 interfaces_time = time.time() # for timing interface comms
 in_mission =0 # either not in a mission, or in mission 1 or 2.
+fix_time_stamp= time.time()
+fix_achieved_this_runtime = False
+fix_latitude = 0.0
+fix_longitude = 0.0
+fix_last_UTC_update = datetime.datetime.now()
+gnss_string = ""
+batt_string = ""
+kell_string = ""
 
 #If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
 if adc_connected and gps_connected and keller_connected:
@@ -180,48 +187,56 @@ while True:
    green.stop()
 
    #every second, update GPS data, battery info, and pressure/temp info. Rotate through tasks to minimize time gaps
-   if (time.time() - interfaces_time) > 0.33:
+   if (time.time() - interfaces_time) > 0.25:
       interfaces_time = time.time()
       interface_rotation +=1
 
       #get GPS data. This is fairly slow, so skip this step if burst photo is active, as it messes with timing
-      if gps_connected and interface_rotation == 1 and hall_button_active==0:
-
-
-         #ADD CODE THAT HANDLES AGE OF LOCATION FIX, and SAVE FIX SO THAT PHOTOS CAN USE THE DATA
-
+      if gps_connected and interface_rotation == 1: # and hall_button_active==0:
 
          #Use try/except to prevent crash from i2c
          try:
             if gps.connected is True:
                if gps.get_nmea_data() is True:
                   if (gps.gnss_messages["Status"]) == 'A': # Status 'A' means GPS has a fix
+                     #setup a green flash
                      green.start(100)
-                     print("Have Fix")
 
                      #check that the date time stamps are in valid format, sometimes they are not. If ok, update the local UTC timestamp offset
                      if isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
-                        datetime_gps = datetime.datetime.combine(gps.gnss_messages["Date"],gps.gnss_messages["Time"])
-                        datetime_offset = datetime_gps - datetime.datetime.now()
 
-                        #If data look valid, and we are recording or in a mission mode, write GPS data to the sensor file
-                        if (recording or in_mission) and sensor_file.closed == False:
-                           print("GNSS:{}\t{:.7f}\t{:.7f}".format(
+                        #if both date and tiem data is good, combine them into one datetime object
+                        datetime_gps = datetime.datetime.combine(gps.gnss_messages["Date"],gps.gnss_messages["Time"]).replace(microsecond = 0)
+
+                        #sometimes the gps gives back the same time multiple times, so only currec the UTC datetime if it a new number
+                        if fix_last_UTC_update != datetime_gps:
+                           datetime_offset = datetime_gps - datetime.datetime.now()
+                           fix_last_UTC_update = datetime_gps
+
+                        #check that the latitude and longitude appear to be in valid format, sometimes they are not.
+                        if isinstance(gps.gnss_messages["Latitude"],float) and isinstance(gps.gnss_messages["Longitude"],float):
+
+                           #Now we are confident in both time and location
+                           #record the pi time at time of good fix as well as the new longitude and latitude
+                           fix_achieved_this_runtime = True
+                           fix_time_stamp = time.time() #this number is for calculating fix age later for photos.
+                           fix_latitude = gps.gnss_messages["Latitude"]
+                           fix_longitude = gps.gnss_messages["Longitude"]
+
+                           #If data looks valid, print GPS data to stream and to any open sensor file.
+                           gnss_string = "{}\t{:.7f}\t{:.7f}".format(
                               (datetime.datetime.now() + datetime_offset).isoformat(sep='\t', timespec = 'milliseconds').replace(':', '').replace('-', ''),
                               gps.gnss_messages["Latitude"],
-                              gps.gnss_messages["Longitude"]), file=sensor_file)
+                              gps.gnss_messages["Longitude"])
+                           print("GNSS:{}".format(gnss_string))
+                           if (recording or in_mission) and sensor_file.closed == False:
+                              print("GNSS:{}".format(gnss_string), file=sensor_file)
 
-                  #also print GPS data to stream
-                  print("UTC Datetime: {} {}\nLatitude: {}\nLongitude: {}".format(
-                     gps.gnss_messages["Date"],
-                     gps.gnss_messages["Time"],
-                     gps.gnss_messages["Latitude"],
-                     gps.gnss_messages["Longitude"]))
-         except:
-            print("GPS error of some kind.")
+         except Exception as e:
+            print(e)
 
-      #get battery voltage ADC via SPI interface
-      elif adc_connected and interface_rotation == 2:
+      #get battery voltage ADC via SPI interface, dont update during photo burst
+      elif adc_connected and interface_rotation == 2: # and hall_button_active ==0:
 
          #Get the adc and then since it is a bit noisy, apply a running average
          reading = getBatteryVoltage()
@@ -229,11 +244,10 @@ while True:
             battery_volt = battery_volt*0.9 + reading*0.1
 
          #print voltage to stream, and if recording or in mission, also write the voltage to the sensor file
-         print("Battery Pack at at %0.3f Volts" % (battery_volt))
+         batt_string = "{}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),battery_volt)
+         print("BATT:{}".format(batt_string))
          if (recording or in_mission) and sensor_file.closed == False:
-            print("BATT:{}\t{:.2f}".format(
-               (datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':', '').replace('-', ''),
-               battery_volt), file=sensor_file)
+            print("BATT:{}".format(batt_string), file=sensor_file)
 
          #if the battery voltage is critically low, stop all interfaces and initiate a shutdown timeout. The shutdown timeout allows a user to intercept if necessary.
          if battery_volt < 9.0:
@@ -281,18 +295,23 @@ while True:
             #so depth calculation of less than 20M are propbaly junk, but keep
             approx_depth = outside.pressure()*10-10
 
-            #print keller date to stream, and if recording or in a mission, also write the data to the sensor file
-            print("pressure: %7.4f bar \t estimated depth: %7.1f meters \t temperature: %0.2f C\n" % (outside.pressure(), approx_depth, outside.temperature()))
+            #print keller data to stream and any open sensor file
+            kell_string  = "{}\t{:.2f}\t{:.1f}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),outside.pressure(), approx_depth, outside.temperature())
+            print("KELL:{}".format(kell_string))
             sys.stdout.flush()
             if (recording or in_mission) and sensor_file.closed == False:
-               print("KELL:{}\t{:.2f}\t{:.1f}\t{:.2f}".format(
-               (datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':', '').replace('-', ''),
-               outside.pressure(), approx_depth, outside.temperature()), file=sensor_file)
+               print("KELL:{}".format(kell_string), file=sensor_file)
+
          except Exception as e:
             print(e)
 
+
+      #just print a new line every second
+      elif interface_rotation ==4:
+         print('')
+
       #got back to top of the interface rotation
-      interface_rotation %= 3
+      interface_rotation %= 4
 
    #after time determined by hdmi_act_led_timeout, disable these perpherals
    #to reduce power consumption (HDMI and ACT LED) and remove light noise (ACT LED)
@@ -486,43 +505,62 @@ while True:
 
          #record time in order to time possible photo burst
          photo_burst_time = time.time()
+         interfaces_time = 0 #this synchronizes interface updates to happen between photos
 
          #haptic feedback and led indication
+         red.start(100)
          if haptic_connected:
             drv.stop()
             drv.sequence[0] = adafruit_drv2605.Effect(74)
             drv.play()
-         red.start(100)
-         sleep(0.1)
+#         sleep(0.05)
          red.stop()
-         sleep(0.15)
 
-         #determine time stamp and filename.
+         #determine time stamp and img file name
          time_stamp = datetime.datetime.now()+datetime_offset
+         filename = serial_number + "_" + time_stamp.isoformat("_","milliseconds")
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-            print(serial_number,time_stamp.isoformat("_","milliseconds"), sep ='_' , end="", file=f)
+            print(filename , end="", file=f)
 
          #capture image via RPi interface
          os.system('echo im 1 > /var/www/html/FIFO')
          print('\nPhoto capture')
          sys.stdout.flush()
 
-         #ADD CODE TO CREATE SENSOR DATA FILE FOR THE IMAGE
 
-
-
-
+         #also create a same named sensor data file and write into it currently available data, and close it right away
+         with open("/var/www/html/media/{}{}".format(filename,".txt"), 'w') as s:
+            #GNSS data consdiretarions: Since we update all the peripherals elsewhere anyway, we will write down the last stored sensor data in the img sensor file.
+            #That is great for battery voltage and for the Keller data, but it's maybe not so great for gpss data which isnt always fresh or available.
+            #so if the fix is super recent, write it in the file as per usual. But if the fix is older than 5 seconds, as would be the case in any underwater dive,
+            # we will write the last know location in is a special line GNS2: current datetime, fix age in seconds, and corrdinates
+            # so if super recent fix, write GNSS
+            if fix_achieved_this_runtime == True:
+               fix_age = time.time() - fix_time_stamp
+               #recent fix, write GNSS
+               if fix_age < 5.0:
+                  print("GNSS:{}".format(gnss_string), file = s )
+               #fix exists but is outdated, write GNS2
+               else:
+                  try:
+                     gnss_string_packed = gnss_string.split("\t")
+                     print("GNS2:{}\t{:.1f}\t{}\t{}".format(time_stamp.isoformat("\t","milliseconds").replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
+                  except Exception as e:
+                     print(e)
+            #and write down the BATT and KELL data, easy and that's gonna be current
+            print("BATT:{}".format(batt_string), file = s)
+            print("KELL:{}".format(kell_string), file = s)
 
 
 
 
       #If the button is continuing to be pressed, continue to take images
-      elif (hall_button_active and (time.time() - photo_burst_time > 0.24)):
+      elif (hall_button_active and (time.time() - photo_burst_time > 0.25)):
 
          #record time in order to time capture instance in photo burst
          photo_burst_time = time.time()
 
-         #haptif feednack with a click. No LED indication in burst
+         #haptic feedback with a click. No LED indication in burst
          if haptic_connected:
             drv.stop()
             drv.sequence[0] = adafruit_drv2605.Effect(17) #17 for solid click , 80 for short vib
@@ -530,6 +568,7 @@ while True:
 
          #determine time stamp and filename.
          time_stamp = datetime.datetime.now()+datetime_offset
+         filename = serial_number + "_" + time_stamp.isoformat("_","milliseconds")
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
             print(serial_number,time_stamp.isoformat("_","milliseconds"), sep ='_' , end="", file=f)
 
@@ -538,9 +577,35 @@ while True:
          print('*')
          sys.stdout.flush()
 
-         #ADD CODE TO CREATE SENSOR DATA FILE FOR THE IMAGE
+         #also create a same named sensor data file and write into it currently available data, and close it right away
+         with open("/var/www/html/media/{}{}".format(filename,".txt"), 'w') as s:
+            #GNSS data consdiretarions: Since we update all the peripherals elsewhere anyway, we will write down the last stored sensor data in the img sensor file.
+            #That is great for battery voltage and for the Keller data, but it's maybe not so great for gpss data which isnt always fresh or available.
+            #so if the fix is super recent, write it in the file as per usual. But if the fix is older than 5 seconds, as would be the case in any underwater dive,
+            # we will write the last know location in is a special line GNS2: current datetime, fix age in seconds, and corrdinates
+            # so if super recent fix, write GNSS
+            if fix_achieved_this_runtime == True:
+               fix_age = time.time() - fix_time_stamp
+               #recent fix, write GNSS
+               if fix_age < 5.0:
+                  print("GNSS:{}".format(gnss_string), file = s )
+               #fix exists but is outdated, write GNS2
+               else:
+                  try:
+                     gnss_string_packed = gnss_string.split("\t")
+                     print("GNS2:{}\t{:.1f}\t{}\t{}".format(time_stamp.isoformat("\t","milliseconds").replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
+                  except Exception as e:
+                     print(e)
+            #and write down the BATT and KELL data, easy and that's gonna be current
+            print("BATT:{}".format(batt_string), file = s)
+            print("KELL:{}".format(kell_string), file = s)
 
 
+      #THere is a bit of a weird bug, that when the photo command is sent to the RPi interfaces too quickly in succesion, which is the case in burst
+      #the RPi interface starts to recod a video as well. Behavior is gone if burst speed is reduced. Very odd, Anyway, to prevent the video to run non stop,
+      #whenever the button get's unpressed, let's send a stop recording command
+      if (hall_button_active==0 and hall_button_active != hall_button_last):
+         os.system('echo ca 0 > /var/www/html/FIFO')
 
 
 
@@ -573,15 +638,15 @@ while True:
          filename = serial_number + "_" + mission1_name + "_" + time_stamp.isoformat("_","milliseconds")
          sensor_file = open("/var/www/html/media/{}{}".format(filename,".txt"), 'w')
 
-     #CODE THAT READS FROM THE MISSION JSON FILE AND TAKES ACTION BASED ON THAT.
+     #CODE THAT READS FROM THE MISSION FILE AND TAKES ACTION BASED ON THAT.
      #******************************************************************
      # whenever photo taken:
        # name photo file serial number + mission name + datetime
        # in the sensor data file, write ICAP:datetime \t image_filename
-     #whenever video started:
+     #whenever video capture is started:
        # name video file serial number + mission name + datetime
        # in the sensor data file, write VCAP:datetime \t video_filename
-     #whenever video stopped:
+     #whenever video capture is stopped:
        # write to sensor file VSTP:datetime \t video_filename
      #******************************************************************
 
