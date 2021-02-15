@@ -230,7 +230,7 @@ while True:
                               gps.gnss_messages["Longitude"])
                            print("GNSS:{}".format(gnss_string))
                            if (recording or in_mission) and sensor_file.closed == False:
-                              print("GNSS:{}".format(gnss_string), file=sensor_file)
+                              print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file=sensor_file)
 
          except Exception as e:
             print(e)
@@ -247,7 +247,7 @@ while True:
          batt_string = "{}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),battery_volt)
          print("BATT:{}".format(batt_string))
          if (recording or in_mission) and sensor_file.closed == False:
-            print("BATT:{}".format(batt_string), file=sensor_file)
+            print("BATT:{}\t{}".format(time.monotonic_ns(), batt_string), file=sensor_file)
 
          #if the battery voltage is critically low, stop all interfaces and initiate a shutdown timeout. The shutdown timeout allows a user to intercept if necessary.
          if battery_volt < 9.0:
@@ -300,7 +300,7 @@ while True:
             print("KELL:{}".format(kell_string))
             sys.stdout.flush()
             if (recording or in_mission) and sensor_file.closed == False:
-               print("KELL:{}".format(kell_string), file=sensor_file)
+               print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file=sensor_file)
 
          except Exception as e:
             print(e)
@@ -351,9 +351,8 @@ while True:
       if (hall_confidence[x] >= 15):
          hall_mode = 1 + x
    #however for special cases such as when currently recording,
-   #go back to that previous mode and let in correctly end processes
-   #NOTE THIS MAY BE CLEANER AND EASIER TO DEBUG IF THE SITUATINS ARE HANDLED HERE
-   if (recording and hall_mode != 6 and hall_mode!=2):
+   #go back to that previous mode, setup a flag that it needs to wrap up, and let in correctly end processes
+   if ((recording or in_mission) and hall_mode != hall_mode_last) : #and hall_mode != 6 and hall_mode!=2):
       hall_mode = hall_mode_last
       end_processes_mode_changed_flag = 1
 
@@ -539,18 +538,17 @@ while True:
                fix_age = time.time() - fix_time_stamp
                #recent fix, write GNSS
                if fix_age < 5.0:
-                  print("GNSS:{}".format(gnss_string), file = s )
+                  print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file = s )
                #fix exists but is outdated, write GNS2
                else:
                   try:
                      gnss_string_packed = gnss_string.split("\t")
-                     print("GNS2:{}\t{:.1f}\t{}\t{}".format(time_stamp.isoformat("\t","milliseconds").replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
+                     print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(),time_stamp.isoformat("\t","milliseconds").replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
                   except Exception as e:
                      print(e)
             #and write down the BATT and KELL data, easy and that's gonna be current
-            print("BATT:{}".format(batt_string), file = s)
-            print("KELL:{}".format(kell_string), file = s)
-
+            print("BATT:{}\t{}".format(time.monotonic_ns(),batt_string), file = s)
+            print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file = s)
 
 
 
@@ -588,17 +586,17 @@ while True:
                fix_age = time.time() - fix_time_stamp
                #recent fix, write GNSS
                if fix_age < 5.0:
-                  print("GNSS:{}".format(gnss_string), file = s )
+                  print("GNSS:{}\t{}".format(time.monotonic_ns(), gnss_string), file = s )
                #fix exists but is outdated, write GNS2
                else:
                   try:
                      gnss_string_packed = gnss_string.split("\t")
-                     print("GNS2:{}\t{:.1f}\t{}\t{}".format(time_stamp.isoformat("\t","milliseconds").replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
+                     print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(), time_stamp.isoformat("\t","milliseconds").replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
                   except Exception as e:
                      print(e)
             #and write down the BATT and KELL data, easy and that's gonna be current
-            print("BATT:{}".format(batt_string), file = s)
-            print("KELL:{}".format(kell_string), file = s)
+            print("BATT:{}\t{}".format(time.monotonic_ns(), batt_string), file = s)
+            print("KELL:{}\t{}".format(time.monotonic_ns(), kell_string), file = s)
 
 
       #THere is a bit of a weird bug, that when the photo command is sent to the RPi interfaces too quickly in succesion, which is the case in burst
@@ -651,14 +649,17 @@ while True:
      #******************************************************************
 
       #This executes if the dial was moved away from this mission. Close the sensor file, and terminate video capture.
-      elif end_processes_mode_changed_flag:
-         end_processes_mode_change_flag = 0
+      if end_processes_mode_changed_flag:
+         end_processes_mode_changed_flag = 0
          sensor_file.close()
+         print('Ending mission 1 by dial')
+         in_mission = 0
          if recording:
             os.system('echo ca 0 > /var/www/html/FIFO')
-            print('Left Camera mode, ending video capture')
+            print('Ending video capture within Mission 1')
             sys.stdout.flush()
             recording = 0
+
 
 
    #Magnet at Mission 2 , flash  red then green twice.
@@ -703,12 +704,14 @@ while True:
      #******************************************************************
 
       #This executes if the dial was moved away from this mission. Close the sensor file, and terminate video capture.
-      elif end_processes_mode_changed_flag:
-         end_processes_mode_change_flag = 0
+      if end_processes_mode_changed_flag:
+         end_processes_mode_changed_flag = 0
          sensor_file.close()
+         print('Ending mission 2 by dial')
+         in_mission = 0
          if recording:
             os.system('echo ca 0 > /var/www/html/FIFO')
-            print('Left Camera mode, ending video capture')
+            print('Ending video capture within Mission 2')
             sys.stdout.flush()
             recording = 0
 
