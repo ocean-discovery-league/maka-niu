@@ -1,4 +1,8 @@
 #!/usr/bin/sudo /usr/bin/python3
+import logging
+import logging.handlers
+import glob
+#from logging.handlers import RotatingFileHandler
 import datetime
 import time
 from time import sleep
@@ -30,6 +34,28 @@ def getBatteryVoltage(vref = 3.3):
    return pack_voltage
 
 
+#############################################################SETUP ERROR AND DEBUG LOGGING
+#name of the next log file
+LOG_FILENAME = '/home/pi/git/maka-niu/code/log/MakaNiu_debug.log'
+
+#create logging objects
+logger = logging.getLogger('MyLogger')
+logger.setLevel(logging.DEBUG)
+
+#setup up to 0 backup log files, meaning we keep logs of last 10 runtimes
+handler = logging.handlers.RotatingFileHandler(LOG_FILENAME, backupCount = 9)
+logger.addHandler(handler)
+
+#determine if any log file exist and if yes all existing logs need to rolloverm then print the list
+needRoll = os.path.isfile(LOG_FILENAME)
+if needRoll:
+   logger.handlers[0].doRollover()
+#logfiles = glob.glob('%s*' % LOG_FILENAME)
+#print('\n'.join(logfiles))
+
+#and now make all debug message also print to console
+logger.addHandler(logging.StreamHandler(sys.stdout))
+
 
 ############################################################### SETUP
 #control variables: change these as desired
@@ -43,7 +69,11 @@ video_timelimit_seconds = 900 # 15 minutes
 
 #To avoid messing with pi's clock, we are creating a UTC datetime offset variable that will be used for timestamping filenames and sensor data
 datetime_offset = datetime.timedelta(0)
-print(datetime.datetime.now())
+#print(datetime.datetime.now())
+
+#print date time and unit serial number
+logger.debug("Serial number: {}\tPi datetime: {}".format(serial_number, datetime.datetime.now()))
+
 
 #setup a timer to disable HDMI output, that way for debug it is still possible to connect a screen and end this program before hdmi cuts.
 hdmi_end_timer = time.time()
@@ -70,19 +100,24 @@ try:
    spi = spidev.SpiDev(1,2)
    spi.max_speed_hz = 10000
    battery_volt = getBatteryVoltage()
-   print("Starting battery voltage:" , round(battery_volt,3), "V")
+   #print("Starting battery voltage:" , round(battery_volt,3), "V")
+   logger.debug("Starting battery voltage: {}V".format(round(battery_volt,3)))
+
 except:
-   print("ADC not connected, SPI fail")
+   #print("ADC not connected, SPI fail")
+   logger.error("ADC not connected, SPI Exception")
    adc_connected = False
 
 if battery_volt < 5 or battery_volt > 15:
-   print("ADC not connected, values out of range.")
+   #print("ADC not connected, values out of range.")
+   logger.debug("ADC not connected, values out of range.")
    adc_connected = False
    battery_volt = 12
 
 #If the batteries are already depleted at start of runtime, initiate shutdown with a timeout to allow for user to intercept
 if battery_volt < 9.0:
-   print('Batteries critically low, initiating shutdown in 60 seconds.')
+   #print('Batteries critically low, initiating shutdown in 60 seconds.')
+   logger.debug('Batteries critically low, initiating shutdown in 60 seconds.')
    sys.stdout.flush()
    red.stop()
    for x in range (2): #2 short then long flashes
@@ -108,7 +143,8 @@ try:
    drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
    drv.play()
 except:
-   print("Haptic feedback not connected.")
+   #print("Haptic feedback not connected.")
+   logger.error("Haptic feedback not connected. Exception")
    haptic_connected = False
 
 #setup i2c for GPS
@@ -117,7 +153,8 @@ gps = qwiic_titan_gps.QwiicTitanGps()
 gps_connected = True
 if gps.connected is False:
    gps_connected = False
-   print("GPS device not connected.", file = sys.stderr)
+   #print("GPS device not connected.", file = sys.stderr)
+   logger.error("GPS device not connected.")
 gps.begin()
 
 
@@ -129,7 +166,8 @@ try:
    outside.init()
 except:
    keller_connected = False
-   print("Keller LD sensor not connected.")
+   #print("Keller LD sensor not connected.")
+   logger.error("Keller LD sensor not connected. Exception")
 
 #setup hall sensor GPIO pins. All pulled up, so active is when low
 GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #push button
@@ -168,14 +206,16 @@ kell_string = ""
 
 #If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
 if adc_connected and gps_connected and keller_connected:
-   print('ADC, GPS, and Keller hardware all talking.')
+   #print('ADC, GPS, and Keller hardware all talking.')
+   logger.debug('ADC, GPS, and Keller hardware all talking.')
    green.start(100)
    sleep(3)
 red.stop()
 green.stop()
 
 #Print to stream that setup is over
-print('Maka Niu Program iniated. Entering main forever loop.')
+#print('Maka Niu Program iniated. Entering main forever loop.')
+logger.debug('Maka Niu Program setup complete Entering main forever loop.')
 sys.stdout.flush()
 
 
@@ -233,7 +273,8 @@ while True:
                               print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file=sensor_file)
 
          except Exception as e:
-            print(e)
+            #print(e)
+            logger.error("@GNSS\n{}".format(e))
 
       #get battery voltage ADC via SPI interface, dont update during photo burst
       elif adc_connected and interface_rotation == 2: # and hall_button_active ==0:
@@ -303,12 +344,21 @@ while True:
                print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file=sensor_file)
 
          except Exception as e:
-            print(e)
+            logger.error("@KELL\n{}".format(e))
+            #print(e)
 
 
-      #just print a new line every second
-      elif interface_rotation ==4:
+      #Talk to the GPS one extra time and dont use the data. Ii is not clear but it seems that there is
+      #a buffer building up so we dont always get the latest time/location otherwise.
+      elif gps_connected and interface_rotation == 4: # and hall_button_active==0:
+         #Use try/except to prevent crash from i2c
+         try:
+            if gps.connected is True:
+               gps.get_nmea_data()
+         except Exception as e:
+            logger.error("@GNSS\n{}".format(e))
          print('')
+
 
       #got back to top of the interface rotation
       interface_rotation %= 4
@@ -319,7 +369,8 @@ while True:
       os.system('/usr/bin/tvservice -o')
       os.system('echo none | sudo tee /sys/class/leds/led0/trigger')
       os.system('echo 0 | sudo tee /sys/class/leds/led0/brightness')
-      print('Timeout elapsed since start. HDMI and ACT LED disabled.')
+#      print('Timeout elapsed since start. HDMI and ACT LED disabled.')
+      logger.debug('Timeout elapsed since start. HDMI and ACT LED disabled.')
       hdmi_enabled = False
 
 
@@ -369,7 +420,8 @@ while True:
       #When initially entering mode: Enable wifi, flash red 3 times, and buzz
       if (hall_mode != hall_mode_last):
          os.system('sudo ifconfig wlan0 up')
-         print('Wifi Mode actvated. three red flashes')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tWifi Mode actvated. three red flashes'.format(time_stamp))
          sys.stdout.flush()
 
          #haptic feedback and led indication
@@ -389,7 +441,8 @@ while True:
       #When initially entering mode: Disable wifi, turn on red led, and buzz
       if (hall_mode != hall_mode_last):
          #os.system('sudo ifconfig wlan0 down')
-         print('Video Mode activated, press button to begin recording')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tVideo Mode activated, press button to begin recording'.format(time_stamp))
          sys.stdout.flush()
 
          #haptic feedback and led indication
@@ -405,15 +458,15 @@ while True:
          #If not recording, begin recording.
          if (recording == 0):
             #1st determine time stamp, video file name, and create same named sensor data file
-            time_stamp = datetime.datetime.now()+datetime_offset
-            filename = serial_number + "_" + time_stamp.isoformat("_","milliseconds")
+            time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+            file_name = serial_number + "_" + time_stamp
             with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-               print(filename , end="", file=f)
-            sensor_file = open("/var/www/html/media/{}{}".format(filename,".txt"), 'w')
+               print(file_name , end="", file=f)
+            sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
 
             #begin video capture via RPi interface
             os.system('echo ca 1 > /var/www/html/FIFO')
-            print('Starting video capture')
+            logger.debug('{}\tStarting video capture: {}'.format(time_stamp,file_name))
             sys.stdout.flush()
             recording = 1
             video_started_time = time.time()
@@ -429,7 +482,8 @@ while True:
          elif (recording):
             #end recordign via RPi interface
             os.system('echo ca 0 > /var/www/html/FIFO')
-            print('Ending video capture')
+            time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+            logger.debug('{}\tEnding video capture'.format(time_stamp))
             sys.stdout.flush()
 
             #cleanup, clear recording flag and close the sensor data file
@@ -447,7 +501,8 @@ while True:
       if end_processes_mode_changed_flag:
          #end recordign via RPi interface
          os.system('echo ca 0 > /var/www/html/FIFO')
-         print('Left Camera mode, ending video capture')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tLeft Camera mode, ending video capture'.format(time_stamp))
          sys.stdout.flush()
 
          #cleanup, clear recording flag and close the sensor data file
@@ -461,7 +516,8 @@ while True:
       if (recording and (time.time()-video_started_time) > video_timelimit_seconds):
          #end recordign via RPi interface
          os.system('echo ca 0 > /var/www/html/FIFO')
-         print('Video capture time limit reached: Start new capture')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tVideo capture time limit reached: Start new capture'.format(time_stamp))
          sys.stdout.flush()
 
          #close the current sensor file and add a short pause for the RPi interface
@@ -470,10 +526,10 @@ while True:
 
          #determine new time stamp, video file name, and create same named sensor data file
          time_stamp = datetime.datetime.now()+datetime_offset
-         filename = serial_number + "_" + time_stamp.isoformat("_","milliseconds")
+         file_name = serial_number + "_" + time_stamp.isoformat("_","milliseconds")
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-            print(filename , end="", file=f)
-         sensor_file = open("/var/www/html/media/{}{}".format(filename,".txt"), 'w')
+            print(file_name , end="", file=f)
+         sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
 
          #restart video recording via RPi interace
          os.system('echo ca 1 > /var/www/html/FIFO')
@@ -486,7 +542,8 @@ while True:
       #When initially entering mode: Disable wifi, flash red led 5 times fast, and buzz
       if (hall_mode != hall_mode_last):
          #os.system('sudo ifconfig wlan0 down')
-         print('Picture Mode activated, 5 flashes. Press button to capture image, hold for burst')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tPicture Mode activated, 5 flashes'.format(time_stamp))
          sys.stdout.flush()
 
          #haptic feedback and led indication
@@ -516,19 +573,19 @@ while True:
          red.stop()
 
          #determine time stamp and img file name
-         time_stamp = datetime.datetime.now()+datetime_offset
-         filename = serial_number + "_" + time_stamp.isoformat("_","milliseconds")
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         file_name = serial_number + "_" + time_stamp
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-            print(filename , end="", file=f)
+            print(file_name , end="", file=f)
 
          #capture image via RPi interface
          os.system('echo im 1 > /var/www/html/FIFO')
-         print('\nPhoto capture')
+         logger.debug('\n{}\tPhoto capture'.format(time_stamp))
          sys.stdout.flush()
 
 
          #also create a same named sensor data file and write into it currently available data, and close it right away
-         with open("/var/www/html/media/{}{}".format(filename,".txt"), 'w') as s:
+         with open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w') as s:
             #GNSS data consdiretarions: Since we update all the peripherals elsewhere anyway, we will write down the last stored sensor data in the img sensor file.
             #That is great for battery voltage and for the Keller data, but it's maybe not so great for gpss data which isnt always fresh or available.
             #so if the fix is super recent, write it in the file as per usual. But if the fix is older than 5 seconds, as would be the case in any underwater dive,
@@ -543,9 +600,9 @@ while True:
                else:
                   try:
                      gnss_string_packed = gnss_string.split("\t")
-                     print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(),time_stamp.isoformat("\t","milliseconds").replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
+                     print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(),time_stamp.replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
                   except Exception as e:
-                     print(e)
+                     logger.debug("@GNS2 PHOTO {}\t{}".format(time_stamp, e))
             #and write down the BATT and KELL data, easy and that's gonna be current
             print("BATT:{}\t{}".format(time.monotonic_ns(),batt_string), file = s)
             print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file = s)
@@ -565,18 +622,18 @@ while True:
             drv.play()
 
          #determine time stamp and filename.
-         time_stamp = datetime.datetime.now()+datetime_offset
-         filename = serial_number + "_" + time_stamp.isoformat("_","milliseconds")
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         file_name = serial_number + "_" + time_stamp
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-            print(serial_number,time_stamp.isoformat("_","milliseconds"), sep ='_' , end="", file=f)
+            print(file_name , end="", file=f)
 
          #capture image vie RPi interface
          os.system('echo im 1 > /var/www/html/FIFO')
-         print('*')
+         logger.debug('*')
          sys.stdout.flush()
 
          #also create a same named sensor data file and write into it currently available data, and close it right away
-         with open("/var/www/html/media/{}{}".format(filename,".txt"), 'w') as s:
+         with open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w') as s:
             #GNSS data consdiretarions: Since we update all the peripherals elsewhere anyway, we will write down the last stored sensor data in the img sensor file.
             #That is great for battery voltage and for the Keller data, but it's maybe not so great for gpss data which isnt always fresh or available.
             #so if the fix is super recent, write it in the file as per usual. But if the fix is older than 5 seconds, as would be the case in any underwater dive,
@@ -591,9 +648,9 @@ while True:
                else:
                   try:
                      gnss_string_packed = gnss_string.split("\t")
-                     print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(), time_stamp.isoformat("\t","milliseconds").replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
+                     print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(), time_stamp.replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
                   except Exception as e:
-                     print(e)
+                     logger.debug("@GNS2 PHOTO {}\t{}".format(time_stamp, e))
             #and write down the BATT and KELL data, easy and that's gonna be current
             print("BATT:{}\t{}".format(time.monotonic_ns(), batt_string), file = s)
             print("KELL:{}\t{}".format(time.monotonic_ns(), kell_string), file = s)
@@ -604,7 +661,7 @@ while True:
       #whenever the button get's unpressed, let's send a stop recording command
       if (hall_button_active==0 and hall_button_active != hall_button_last):
          os.system('echo ca 0 > /var/www/html/FIFO')
-
+         logger.debug('End video just in case it was started in burst')
 
 
 
@@ -620,7 +677,8 @@ while True:
 
          #disable wifi
          #os.system('sudo ifconfig wlan0 down')
-         print('Mission 1 activated')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tMission 1 activated'.format(time_stamp))
          sys.stdout.flush()
 
          #haptic feedback and LED indication
@@ -632,9 +690,8 @@ while True:
          red.stop()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
-         time_stamp = datetime.datetime.now()+datetime_offset
-         filename = serial_number + "_" + mission1_name + "_" + time_stamp.isoformat("_","milliseconds")
-         sensor_file = open("/var/www/html/media/{}{}".format(filename,".txt"), 'w')
+         file_name = serial_number + "_" + mission1_name + "_" + time_stamp
+         sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
 
      #CODE THAT READS FROM THE MISSION FILE AND TAKES ACTION BASED ON THAT.
      #******************************************************************
@@ -652,11 +709,12 @@ while True:
       if end_processes_mode_changed_flag:
          end_processes_mode_changed_flag = 0
          sensor_file.close()
-         print('Ending mission 1 by dial')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tEnding mission 1 by dial'.format(time_stamp))
          in_mission = 0
          if recording:
             os.system('echo ca 0 > /var/www/html/FIFO')
-            print('Ending video capture within Mission 1')
+            logger.debug('{}\tEnding video capture within Mission 1'.format(time_stamp))
             sys.stdout.flush()
             recording = 0
 
@@ -671,7 +729,8 @@ while True:
 
          #disable wifi
          #os.system('sudo ifconfig wlan0 down')
-         print('Mission 2 activated')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tMission 2 activated'.format(time_stamp))
          sys.stdout.flush()
 
          #haptic feedback and LED indication
@@ -687,9 +746,9 @@ while True:
          red.stop()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
-         time_stamp = datetime.datetime.now()+datetime_offset
-         filename = serial_number + "_" + mission2_name + "_" + time_stamp.isoformat("_","milliseconds")
-         sensor_file = open("/var/www/html/media/{}{}".format(filename,".txt"), 'w')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         file_name = serial_number + "_" + mission2_name + "_" + time_stamp
+         sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
 
      #CODE THAT READS A LINE FROM THE MISSION JSON AND TAKEs ACTION BASED ON THAT.
      #******************************************************************
@@ -707,18 +766,20 @@ while True:
       if end_processes_mode_changed_flag:
          end_processes_mode_changed_flag = 0
          sensor_file.close()
-         print('Ending mission 2 by dial')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tEnding mission 2 by dial'.format(time_stamp))
          in_mission = 0
          if recording:
             os.system('echo ca 0 > /var/www/html/FIFO')
-            print('Ending video capture within Mission 2')
+            logger.debug('{}\tEnding video capture within Mission 2'.format(time_stamp))
             sys.stdout.flush()
             recording = 0
 
 
    #Magnet at Power Off.
    if (hall_mode == 6 and hall_mode != hall_mode_last):
-      print('Powerdown activated')
+      time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+      logger.debug('{}\tPowerdown activated'.format(time_stamp))
       sys.stdout.flush()
 
       #Haptic feedback and LED indication
