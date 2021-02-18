@@ -16,6 +16,7 @@ import busio
 import adafruit_drv2605
 import spidev
 import qwiic_titan_gps
+import qwiic_icm20948
 from kellerLD import KellerLD
 
 
@@ -100,16 +101,13 @@ try:
    spi = spidev.SpiDev(1,2)
    spi.max_speed_hz = 10000
    battery_volt = getBatteryVoltage()
-   #print("Starting battery voltage:" , round(battery_volt,3), "V")
    logger.debug("Starting battery voltage: {}V".format(round(battery_volt,3)))
 
 except:
-   #print("ADC not connected, SPI fail")
    logger.error("ADC not connected, SPI Exception")
    adc_connected = False
 
 if battery_volt < 5 or battery_volt > 15:
-   #print("ADC not connected, values out of range.")
    logger.debug("ADC not connected, values out of range.")
    adc_connected = False
    battery_volt = 12
@@ -142,8 +140,8 @@ try:
    drv = adafruit_drv2605.DRV2605(i2c)
    drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
    drv.play()
+   logger.debug("Haptic feedback device connected")
 except:
-   #print("Haptic feedback not connected.")
    logger.error("Haptic feedback not connected. Exception")
    haptic_connected = False
 
@@ -153,8 +151,9 @@ gps = qwiic_titan_gps.QwiicTitanGps()
 gps_connected = True
 if gps.connected is False:
    gps_connected = False
-   #print("GPS device not connected.", file = sys.stderr)
    logger.error("GPS device not connected.")
+else:
+   logger.debug("GPS device connected")
 gps.begin()
 
 
@@ -164,10 +163,30 @@ outside = KellerLD()
 keller_connected = True
 try:
    outside.init()
+   logger.debug("Keller sensor connected")
+
 except:
    keller_connected = False
-   #print("Keller LD sensor not connected.")
    logger.error("Keller LD sensor not connected. Exception")
+
+
+#setup i2c for IMU sensor
+#If there is a hardware issue, flag it and do not use the feature anymore this runtime.
+imu_connected = True
+try:
+   imu = qwiic_icm20948.QwiicIcm20948()
+   if imu.connected == False:
+      imu_connected = False
+      logger.error("IMU sensor not connected")
+   else:
+      logger.debug("IMU sensor connected")
+      imu.begin
+      imu.setFullScaleRangeAccel(0x02) #+-8G forces
+      imu.setFullScaleRangeGyro(0x00) #250 degrees per second
+except:
+   imu_connected = False
+   logger.error("IMU sensor not connected. Exception")
+
 
 #setup hall sensor GPIO pins. All pulled up, so active is when low
 GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #push button
@@ -206,7 +225,6 @@ kell_string = ""
 
 #If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
 if adc_connected and gps_connected and keller_connected:
-   #print('ADC, GPS, and Keller hardware all talking.')
    logger.debug('ADC, GPS, and Keller hardware all talking.')
    green.start(100)
    sleep(3)
@@ -214,7 +232,6 @@ red.stop()
 green.stop()
 
 #Print to stream that setup is over
-#print('Maka Niu Program iniated. Entering main forever loop.')
 logger.debug('Maka Niu Program setup complete Entering main forever loop.')
 sys.stdout.flush()
 
@@ -263,7 +280,7 @@ while True:
                            fix_latitude = gps.gnss_messages["Latitude"]
                            fix_longitude = gps.gnss_messages["Longitude"]
 
-                           #If data looks valid, print GPS data to stream and to any open sensor file.
+                           #If data looks valid, print GPS data to console and to any open sensor file.
                            gnss_string = "{}\t{:.7f}\t{:.7f}".format(
                               (datetime.datetime.now() + datetime_offset).isoformat(sep='\t', timespec = 'milliseconds').replace(':', '').replace('-', ''),
                               gps.gnss_messages["Latitude"],
@@ -273,11 +290,10 @@ while True:
                               print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file=sensor_file)
 
          except Exception as e:
-            #print(e)
             logger.error("@GNSS\n{}".format(e))
 
       #get battery voltage ADC via SPI interface, dont update during photo burst
-      elif adc_connected and interface_rotation == 2: # and hall_button_active ==0:
+      if adc_connected and interface_rotation == 2: # and hall_button_active ==0:
 
          #Get the adc and then since it is a bit noisy, apply a running average
          reading = getBatteryVoltage()
@@ -296,13 +312,13 @@ while True:
 
             #count to 5 to be sure
             if battery_low_counter >=5:
-               print('Batteries critically low, ending processes now, initiating shutdown in 60 seconds.')
+               logger.debug('Batteries critically low, ending processes now, initiating shutdown in 60 seconds.')
                sys.stdout.flush()
 
                #end video recording and close the sensor file
                if recording:
                   os.system('echo ca 0 > /var/www/html/FIFO')
-                  print('Ending video capture')
+                  logger.debug('Ending video capture')
                   sensor_file.close()
                red.stop()
 
@@ -325,8 +341,45 @@ while True:
          else:
             battery_low_counter = 0
 
+
+      #On the same rotation as SPI, which is way faster, also talk to the IMU on i2c.
+      #Get acceleration xyz in Gs, degree per s xyz rotation, micro T magnetic field, and internal temperature.
+      if imu_connected and interface_rotation ==2:
+         try:
+            if imu.dataReady():
+               imu.getAgmt()
+               imu_string  = "{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.1f}\t{:.1f}\t{:.1f}\t{:.1f}\t{:.1f}\t{:.1f}\t{:.2f}".format(
+                  (datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),
+                  imu.axRaw/4096.0, #get Gs, up to +-8G
+                  imu.ayRaw/4096.0,
+                  imu.azRaw/4096.0,
+                  imu.gxRaw/131.0, #get degrees per second, up to +-250d/s
+                  imu.gyRaw/131.0,
+                  imu.gzRaw/131.0,
+                  imu.mxRaw/0.15, #get uT + - 4900uT
+                  imu.myRaw/0.15,
+                  imu.mzRaw/0.15,
+                  (imu.tmpRaw-21)/333.87 + 21) #get temperature in C. All the maths here are inctructions from IMU datasheet
+
+               #print IMU data to console and to any open sensor file.
+               print("IMUN:{}".format(imu_string))
+               if (recording or in_mission) and sensor_file.closed == False:
+                  print("IMUN:{}\t{}".format(time.monotonic_ns(), imu_string), file=sensor_file)
+         except Exception as e:
+            logger.error("@IMUN\n{}".format(e))
+
+      #Talk to the GPS one extra time and dont use the data. Ii is not clear but it seems that there is
+      #a buffer building up so we dont always get the latest time/location otherwise.
+      if gps_connected and interface_rotation == 3: # and hall_button_active==0:
+         try:
+            if gps.connected is True:
+               gps.get_nmea_data()
+         except Exception as e:
+            logger.error("@GNSS\n{}".format(e))
+
+
       #get keller sensor data
-      elif keller_connected and interface_rotation ==3:
+      if keller_connected and interface_rotation ==4:
          #use try except to avoid i2c crash
          try:
             #get the data
@@ -338,30 +391,19 @@ while True:
 
             #print keller data to stream and any open sensor file
             kell_string  = "{}\t{:.2f}\t{:.1f}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),outside.pressure(), approx_depth, outside.temperature())
-            print("KELL:{}".format(kell_string))
+            logger.debug("KELL:{}".format(kell_string))
             sys.stdout.flush()
             if (recording or in_mission) and sensor_file.closed == False:
                print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file=sensor_file)
 
          except Exception as e:
             logger.error("@KELL\n{}".format(e))
-            #print(e)
+         print('') #print an extra line in console to show one second passed
 
 
-      #Talk to the GPS one extra time and dont use the data. Ii is not clear but it seems that there is
-      #a buffer building up so we dont always get the latest time/location otherwise.
-      elif gps_connected and interface_rotation == 4: # and hall_button_active==0:
-         #Use try/except to prevent crash from i2c
-         try:
-            if gps.connected is True:
-               gps.get_nmea_data()
-         except Exception as e:
-            logger.error("@GNSS\n{}".format(e))
-         print('')
-
-
-      #got back to top of the interface rotation
+      #go back to top of the interface rotation
       interface_rotation %= 4
+
 
    #after time determined by hdmi_act_led_timeout, disable these perpherals
    #to reduce power consumption (HDMI and ACT LED) and remove light noise (ACT LED)
@@ -369,7 +411,6 @@ while True:
       os.system('/usr/bin/tvservice -o')
       os.system('echo none | sudo tee /sys/class/leds/led0/trigger')
       os.system('echo 0 | sudo tee /sys/class/leds/led0/brightness')
-#      print('Timeout elapsed since start. HDMI and ACT LED disabled.')
       logger.debug('Timeout elapsed since start. HDMI and ACT LED disabled.')
       hdmi_enabled = False
 
@@ -569,7 +610,6 @@ while True:
             drv.stop()
             drv.sequence[0] = adafruit_drv2605.Effect(74)
             drv.play()
-#         sleep(0.05)
          red.stop()
 
          #determine time stamp and img file name
@@ -606,6 +646,7 @@ while True:
             #and write down the BATT and KELL data, easy and that's gonna be current
             print("BATT:{}\t{}".format(time.monotonic_ns(),batt_string), file = s)
             print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file = s)
+            print("IMUN:{}\t{}".format(time.monotonic_ns(),imu_string), file=s)
 
 
 
@@ -654,6 +695,7 @@ while True:
             #and write down the BATT and KELL data, easy and that's gonna be current
             print("BATT:{}\t{}".format(time.monotonic_ns(), batt_string), file = s)
             print("KELL:{}\t{}".format(time.monotonic_ns(), kell_string), file = s)
+            print("IMUN:{}\t{}".format(time.monotonic_ns(),imu_string), file=s)
 
 
       #THere is a bit of a weird bug, that when the photo command is sent to the RPi interfaces too quickly in succesion, which is the case in burst
