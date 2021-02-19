@@ -51,11 +51,13 @@ logger.addHandler(handler)
 needRoll = os.path.isfile(LOG_FILENAME)
 if needRoll:
    logger.handlers[0].doRollover()
-#logfiles = glob.glob('%s*' % LOG_FILENAME)
-#print('\n'.join(logfiles))
 
 #and now make all debug message also print to console
 logger.addHandler(logging.StreamHandler(sys.stdout))
+
+
+
+
 
 
 ############################################################### SETUP
@@ -67,14 +69,11 @@ hdmi_act_led_timeout_seconds = 90
 battery_low_shutdown_timeout_seconds = 60
 video_timelimit_seconds = 900 # 15 minutes
 
-
 #To avoid messing with pi's clock, we are creating a UTC datetime offset variable that will be used for timestamping filenames and sensor data
 datetime_offset = datetime.timedelta(0)
-#print(datetime.datetime.now())
 
 #print date time and unit serial number
 logger.debug("Serial number: {}\tPi datetime: {}".format(serial_number, datetime.datetime.now()))
-
 
 #setup a timer to disable HDMI output, that way for debug it is still possible to connect a screen and end this program before hdmi cuts.
 hdmi_end_timer = time.time()
@@ -89,6 +88,8 @@ green = GPIO.PWM(13, 1000) #(pin, freq)
 
 #setup the GPIO pin that enables 3.3V regulator in the BMS board that powers GPS, Keller, IMU.
 GPIO.setup(18, GPIO.OUT)
+#GPIO.output(18, GPIO.LOW) #NOTE: is a mission has long standby time and the peripherals are not needed, one may set this pin low to preserve power
+#sleep(0.5)
 GPIO.output(18, GPIO.HIGH) #NOTE: is a mission has long standby time and the peripherals are not needed, one may set this pin low to preserve power
 sleep(0.5)
 
@@ -114,7 +115,6 @@ if battery_volt < 5 or battery_volt > 15:
 
 #If the batteries are already depleted at start of runtime, initiate shutdown with a timeout to allow for user to intercept
 if battery_volt < 9.0:
-   #print('Batteries critically low, initiating shutdown in 60 seconds.')
    logger.debug('Batteries critically low, initiating shutdown in 60 seconds.')
    sys.stdout.flush()
    red.stop()
@@ -179,10 +179,10 @@ try:
       imu_connected = False
       logger.error("IMU sensor not connected")
    else:
-      logger.debug("IMU sensor connected")
-      imu.begin
+      imu.begin()
       imu.setFullScaleRangeAccel(0x02) #+-8G forces
       imu.setFullScaleRangeGyro(0x00) #250 degrees per second
+      logger.debug("IMU sensor connected")
 except:
    imu_connected = False
    logger.error("IMU sensor not connected. Exception")
@@ -222,6 +222,7 @@ fix_last_UTC_update = datetime.datetime.now()
 gnss_string = ""
 batt_string = ""
 kell_string = ""
+#imu_string = ""
 
 #If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
 if adc_connected and gps_connected and keller_connected:
@@ -244,7 +245,7 @@ while True:
    green.stop()
 
    #every second, update GPS data, battery info, and pressure/temp info. Rotate through tasks to minimize time gaps
-   if (time.time() - interfaces_time) > 0.25:
+   if (time.time() - interfaces_time) > 0.24:
       interfaces_time = time.time()
       interface_rotation +=1
 
@@ -264,11 +265,16 @@ while True:
 
                         #if both date and tiem data is good, combine them into one datetime object
                         datetime_gps = datetime.datetime.combine(gps.gnss_messages["Date"],gps.gnss_messages["Time"]).replace(microsecond = 0)
+                        proposed_datetime_offset = datetime_gps - datetime.datetime.now()
 
-                        #sometimes the gps gives back the same time multiple times, so only currec the UTC datetime if it a new number
-                        if fix_last_UTC_update != datetime_gps:
-                           datetime_offset = datetime_gps - datetime.datetime.now()
-                           fix_last_UTC_update = datetime_gps
+                        #sometimes the gps gives back the same time multiple times, and so can give slighly outdated time.
+                        #That is small but reversing the clock results in sensor data with timestamp out of order.
+                        #SoWe will only update time if the GPS moves times forward. That way sensor data timestamps are consistent
+                        #if fix_last_UTC_update != datetime_gps:
+                           #datetime_offset = datetime_gps - datetime.datetime.now()
+                           #fix_last_UTC_update = datetime_gps
+                        if proposed_datetime_offset > datetime_offset:
+                           datetime_offset = proposed_datetime_offset
 
                         #check that the latitude and longitude appear to be in valid format, sometimes they are not.
                         if isinstance(gps.gnss_messages["Latitude"],float) and isinstance(gps.gnss_messages["Longitude"],float):
@@ -344,7 +350,7 @@ while True:
 
       #On the same rotation as SPI, which is way faster, also talk to the IMU on i2c.
       #Get acceleration xyz in Gs, degree per s xyz rotation, micro T magnetic field, and internal temperature.
-      if imu_connected and interface_rotation ==2:
+      if imu_connected and interface_rotation ==3:
          try:
             if imu.dataReady():
                imu.getAgmt()
@@ -370,12 +376,12 @@ while True:
 
       #Talk to the GPS one extra time and dont use the data. Ii is not clear but it seems that there is
       #a buffer building up so we dont always get the latest time/location otherwise.
-      if gps_connected and interface_rotation == 3: # and hall_button_active==0:
-         try:
-            if gps.connected is True:
-               gps.get_nmea_data()
-         except Exception as e:
-            logger.error("@GNSS\n{}".format(e))
+      #if gps_connected and interface_rotation == 3: # and hall_button_active==0:
+      #   try:
+      #      if gps.connected is True:
+      #         gps.get_nmea_data()
+      #   except Exception as e:
+      #      logger.error("@GNSS\n{}".format(e))
 
 
       #get keller sensor data
@@ -391,7 +397,7 @@ while True:
 
             #print keller data to stream and any open sensor file
             kell_string  = "{}\t{:.2f}\t{:.1f}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),outside.pressure(), approx_depth, outside.temperature())
-            logger.debug("KELL:{}".format(kell_string))
+            print("KELL:{}".format(kell_string))
             sys.stdout.flush()
             if (recording or in_mission) and sensor_file.closed == False:
                print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file=sensor_file)
@@ -476,6 +482,24 @@ while True:
             red.stop()
          if haptic_connected:
             drv.stop()
+
+      #in wifi mode, when the button is pressed, flas the green led a number of times based on battery life 1x for low, 2x for mid, 3x for high
+      if (hall_button_active != hall_button_last and hall_button_active):
+         blink_count = 0
+         if battery_volt > 12.0:
+            blink_count=3
+         elif battery_volt > 10.0:
+            blink_count=2
+         else:
+            blink_count=1
+ 
+         for x in range(blink_count):
+            green.start(100)
+            sleep(0.5)
+            green.stop()
+            sleep(0.25)
+
+
 
    #Magnet at Video Mode
    if (hall_mode == 2):
@@ -651,7 +675,7 @@ while True:
 
 
       #If the button is continuing to be pressed, continue to take images
-      elif (hall_button_active and (time.time() - photo_burst_time > 0.25)):
+      elif (hall_button_active and (time.time() - photo_burst_time > 0.24)):
 
          #record time in order to time capture instance in photo burst
          photo_burst_time = time.time()
