@@ -59,6 +59,10 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 ############################################################### SETUP
+#make every print flush right away
+#print = partial(print, flush=True)
+
+
 #control variables: change these as desired
 #if os.path.isfile(makaniu_config)
 serial_number = socket.gethostname() #makaniu_config.serial_number # "MKN0001"
@@ -221,7 +225,7 @@ fix_last_UTC_update = datetime.datetime.now()
 gnss_string = ""
 batt_string = ""
 kell_string = ""
-#imu_string = ""
+imu_string = ""
 
 #If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
 if adc_connected and gps_connected and keller_connected:
@@ -233,7 +237,6 @@ green.stop()
 
 #Print to stream that setup is over
 logger.debug('Maka Niu Program setup complete Entering main forever loop.')
-sys.stdout.flush()
 
 
 ################################################################# MAIN FOREVER LOOP
@@ -292,7 +295,7 @@ while True:
                               gps.gnss_messages["Longitude"])
                            print("GNSS:{}".format(gnss_string))
                            if (recording or in_mission) and sensor_file.closed == False:
-                              print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file=sensor_file)
+                              print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file=sensor_file, flush=True)
 
          except Exception as e:
             logger.error("@GNSS\n{}".format(e))
@@ -309,7 +312,7 @@ while True:
          batt_string = "{}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),battery_volt)
          print("BATT:{}".format(batt_string))
          if (recording or in_mission) and sensor_file.closed == False:
-            print("BATT:{}\t{}".format(time.monotonic_ns(), batt_string), file=sensor_file)
+            print("BATT:{}\t{}".format(time.monotonic_ns(), batt_string), file=sensor_file, flush=True)
 
          #if the battery voltage is critically low, stop all interfaces and initiate a shutdown timeout. The shutdown timeout allows a user to intercept if necessary.
          if battery_volt < 9.0:
@@ -369,7 +372,7 @@ while True:
                #print IMU data to console and to any open sensor file.
                print("IMUN:{}".format(imu_string))
                if (recording or in_mission) and sensor_file.closed == False:
-                  print("IMUN:{}\t{}".format(time.monotonic_ns(), imu_string), file=sensor_file)
+                  print("IMUN:{}\t{}".format(time.monotonic_ns(), imu_string), file=sensor_file, flush= True)
          except Exception as e:
             logger.error("@IMUN\n{}".format(e))
 
@@ -399,7 +402,7 @@ while True:
             print("KELL:{}".format(kell_string))
             sys.stdout.flush()
             if (recording or in_mission) and sensor_file.closed == False:
-               print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file=sensor_file)
+               print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file=sensor_file, flush = True)
 
          except Exception as e:
             logger.error("@KELL\n{}".format(e))
@@ -461,14 +464,25 @@ while True:
       sys.stdout.flush()
       red.stop()
 
+      #write status to status file
+      with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
+          print("0" , end="", file=f, flush= True)
+
+
+
    #Magnet at Wifi Mode
    if (hall_mode == 1):
       #When initially entering mode: Enable wifi, flash red 3 times, and buzz
       if (hall_mode != hall_mode_last):
+
+         #write status to status file
+         with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
+            print("1" , end="", file=f, flush= True)
+
+
          os.system('sudo ifconfig wlan0 up')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tWifi Mode actvated. three red flashes'.format(time_stamp))
-         sys.stdout.flush()
 
          #haptic feedback and led indication
          if haptic_connected:
@@ -508,10 +522,14 @@ while True:
    if (hall_mode == 2):
       #When initially entering mode: Disable wifi, turn on red led, and buzz
       if (hall_mode != hall_mode_last):
+
+         #write status to status file
+         with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
+            print("2" , end="", file=f, flush= True)
+
          #os.system('sudo ifconfig wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tVideo Mode activated, press button to begin recording'.format(time_stamp))
-         sys.stdout.flush()
 
          #haptic feedback and led indication
          if haptic_connected:
@@ -535,7 +553,6 @@ while True:
             #begin video capture via RPi interface
             os.system('echo ca 1 > /var/www/html/FIFO')
             logger.debug('{}\tStarting video capture: {}'.format(time_stamp,file_name))
-            sys.stdout.flush()
             recording = 1
             video_started_time = time.time()
 
@@ -552,7 +569,6 @@ while True:
             os.system('echo ca 0 > /var/www/html/FIFO')
             time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
             logger.debug('{}\tEnding video capture'.format(time_stamp))
-            sys.stdout.flush()
 
             #cleanup, clear recording flag and close the sensor data file
             recording = 0
@@ -571,7 +587,6 @@ while True:
          os.system('echo ca 0 > /var/www/html/FIFO')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tLeft Camera mode, ending video capture'.format(time_stamp))
-         sys.stdout.flush()
 
          #cleanup, clear recording flag and close the sensor data file
          recording = 0
@@ -586,7 +601,6 @@ while True:
          os.system('echo ca 0 > /var/www/html/FIFO')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tVideo capture time limit reached: Start new capture'.format(time_stamp))
-         sys.stdout.flush()
 
          #close the current sensor file and add a short pause for the RPi interface
          sensor_file.close()
@@ -601,7 +615,6 @@ while True:
 
          #restart video recording via RPi interace
          os.system('echo ca 1 > /var/www/html/FIFO')
-         sys.stdout.flush()
          video_started_time = time.time()
 
 
@@ -609,10 +622,14 @@ while True:
    if (hall_mode == 3):
       #When initially entering mode: Disable wifi, flash red led 5 times fast, and buzz
       if (hall_mode != hall_mode_last):
+
+         #write status to status file
+         with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
+            print("3" , end="", file=f, flush= True)
+
          #os.system('sudo ifconfig wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tPicture Mode activated, 5 flashes'.format(time_stamp))
-         sys.stdout.flush()
 
          #haptic feedback and led indication
          if haptic_connected:
@@ -648,7 +665,6 @@ while True:
          #capture image via RPi interface
          os.system('echo im 1 > /var/www/html/FIFO')
          logger.debug('\n{}\tPhoto capture'.format(time_stamp))
-         sys.stdout.flush()
 
 
          #also create a same named sensor data file and write into it currently available data, and close it right away
@@ -763,6 +779,13 @@ while True:
          file_name = serial_number + "_" + mission1_name + "_" + time_stamp
          sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
 
+
+         #write status to status file
+         with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
+            print("4 {}.txt".format(file_name) , end="", file=f, flush= True)
+
+
+
      #CODE THAT READS FROM THE MISSION FILE AND TAKES ACTION BASED ON THAT.
      #******************************************************************
      # whenever photo taken:
@@ -820,6 +843,12 @@ while True:
          file_name = serial_number + "_" + mission2_name + "_" + time_stamp
          sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
 
+         #write status to status file
+         with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
+            print("5 {}.txt".format(file_name) , end="", file=f, flush= True)
+
+
+
      #CODE THAT READS A LINE FROM THE MISSION JSON AND TAKEs ACTION BASED ON THAT.
      #******************************************************************
      # whenever photo taken:
@@ -851,6 +880,11 @@ while True:
       time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
       logger.debug('{}\tPowerdown activated'.format(time_stamp))
       sys.stdout.flush()
+
+      #write status to status file
+      with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
+         print("6", end="", file=f, flush= True)
+
 
       #Haptic feedback and LED indication
       if haptic_connected:
