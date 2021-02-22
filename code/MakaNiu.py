@@ -18,7 +18,7 @@ import spidev
 import qwiic_titan_gps
 import qwiic_icm20948
 from kellerLD import KellerLD
-import makaniu_config
+#import makaniu_config
 import socket
 
 ############################################################### FUCNTIONS
@@ -55,7 +55,6 @@ if needRoll:
 
 #and now make all debug message also print to console
 logger.addHandler(logging.StreamHandler(sys.stdout))
-
 
 
 
