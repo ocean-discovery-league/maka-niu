@@ -18,7 +18,8 @@ import spidev
 import qwiic_titan_gps
 import qwiic_icm20948
 from kellerLD import KellerLD
-
+import makaniu_config
+import socket
 
 ############################################################### FUCNTIONS
 def getBatteryVoltage(vref = 3.3):
@@ -58,11 +59,10 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 
-
-
 ############################################################### SETUP
 #control variables: change these as desired
-serial_number= "MKN0001"
+#if os.path.isfile(makaniu_config)
+serial_number = socket.gethostname() #makaniu_config.serial_number # "MKN0001"
 mission1_name = "M1" #can be user specified
 mission2_name = "M2" #can be user specified
 hdmi_act_led_timeout_seconds = 90
@@ -391,9 +391,9 @@ while True:
             #get the data
             outside.read()
 
-            #approximate depth from pressure. Keller 7LD is rated 3-200bar
-            #so depth calculation of less than 20M are propbaly junk, but keep
-            approx_depth = outside.pressure()*10-10
+            #approximate depth from pressure. Keller 7LD is rated 3-200bar absolute pressure and reads 1 bar as zero
+            #so depth calculation of less than 20M are likely unreliable
+            approx_depth = outside.pressure()*10
 
             #print keller data to stream and any open sensor file
             kell_string  = "{}\t{:.2f}\t{:.1f}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),outside.pressure(), approx_depth, outside.temperature())
@@ -483,21 +483,25 @@ while True:
          if haptic_connected:
             drv.stop()
 
-      #in wifi mode, when the button is pressed, flas the green led a number of times based on battery life 1x for low, 2x for mid, 3x for high
+      #in wifi mode, when the button is pressed, flash the green led a number of times based on battery life 1x for low, 2x for mid, 3x for high
       if (hall_button_active != hall_button_last and hall_button_active):
-         blink_count = 0
-         if battery_volt > 12.0:
+         blink_count = 1
+         if battery_volt > 4.0*3:    #4.2 to 4.0V is about 100-80% charge
+            blink_count=5
+         elif battery_volt > 3.7*3:  #4.0 to 3.7V is about 80-60% charge
+            blink_count=4
+         elif battery_volt > 3.6*3:  #3.7 to 3.6V is about 60-40% charge
             blink_count=3
-         elif battery_volt > 10.0:
+         elif battery_volt > 3.4*3:  #3.6 to 3.4V is about 40-20% charge
             blink_count=2
-         else:
+         else:                       #3.4 to 3.0V is about 20-0% charge (pi will autoshutdown at 3V/cell)
             blink_count=1
- 
+
          for x in range(blink_count):
             green.start(100)
             sleep(0.5)
             green.stop()
-            sleep(0.25)
+            sleep(0.2)
 
 
 
@@ -523,7 +527,7 @@ while True:
          #If not recording, begin recording.
          if (recording == 0):
             #1st determine time stamp, video file name, and create same named sensor data file
-            time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+            time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
             file_name = serial_number + "_" + time_stamp
             with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
                print(file_name , end="", file=f)
@@ -591,7 +595,7 @@ while True:
 
          #determine new time stamp, video file name, and create same named sensor data file
          time_stamp = datetime.datetime.now()+datetime_offset
-         file_name = serial_number + "_" + time_stamp.isoformat("_","milliseconds")
+         file_name = serial_number + "_" + time_stamp.isoformat("_","milliseconds").replace(':','_').replace('-','_')
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
             print(file_name , end="", file=f)
          sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
@@ -637,7 +641,7 @@ while True:
          red.stop()
 
          #determine time stamp and img file name
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
          file_name = serial_number + "_" + time_stamp
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
             print(file_name , end="", file=f)
@@ -687,7 +691,7 @@ while True:
             drv.play()
 
          #determine time stamp and filename.
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
          file_name = serial_number + "_" + time_stamp
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
             print(file_name , end="", file=f)
@@ -756,6 +760,7 @@ while True:
          red.stop()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
          file_name = serial_number + "_" + mission1_name + "_" + time_stamp
          sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
 
@@ -812,7 +817,7 @@ while True:
          red.stop()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
          file_name = serial_number + "_" + mission2_name + "_" + time_stamp
          sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
 
