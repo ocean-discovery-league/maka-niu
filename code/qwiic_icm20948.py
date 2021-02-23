@@ -59,13 +59,13 @@ import time
 # This allows higher level logic to rapidly create a index of qwiic devices at 
 # runtine
 #
-# The name of this device 
+# The name of this device
 _DEFAULT_NAME = "Qwiic ICM20948"
 
 # Some devices have multiple availabel addresses - this is a list of these addresses.
 # NOTE: The first address in this list is considered the default I2C address for the 
 # device.
-_AVAILABLE_I2C_ADDRESS = [0x68, 0x69]
+_AVAILABLE_I2C_ADDRESS = [0x69,0x68]
 
 # define our valid chip IDs
 _validChipIDs = [0xEA]

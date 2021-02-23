@@ -59,13 +59,8 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 ############################################################### SETUP
-#make every print flush right away
-#print = partial(print, flush=True)
-
-
 #control variables: change these as desired
-#if os.path.isfile(makaniu_config)
-serial_number = socket.gethostname() #makaniu_config.serial_number # "MKN0001"
+serial_number = socket.gethostname()
 mission1_name = "M1" #can be user specified
 mission2_name = "M2" #can be user specified
 hdmi_act_led_timeout_seconds = 90
@@ -91,8 +86,6 @@ green = GPIO.PWM(13, 1000) #(pin, freq)
 
 #setup the GPIO pin that enables 3.3V regulator in the BMS board that powers GPS, Keller, IMU.
 GPIO.setup(18, GPIO.OUT)
-#GPIO.output(18, GPIO.LOW) #NOTE: is a mission has long standby time and the peripherals are not needed, one may set this pin low to preserve power
-#sleep(0.5)
 GPIO.output(18, GPIO.HIGH) #NOTE: is a mission has long standby time and the peripherals are not needed, one may set this pin low to preserve power
 sleep(0.5)
 
@@ -172,7 +165,6 @@ except:
    keller_connected = False
    logger.error("Keller LD sensor not connected. Exception")
 
-
 #setup i2c for IMU sensor
 #If there is a hardware issue, flag it and do not use the feature anymore this runtime.
 imu_connected = True
@@ -189,7 +181,6 @@ try:
 except:
    imu_connected = False
    logger.error("IMU sensor not connected. Exception")
-
 
 #setup hall sensor GPIO pins. All pulled up, so active is when low
 GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #push button
@@ -271,11 +262,8 @@ while True:
 
                         #sometimes the gps gives back the same time multiple times, and so can give slighly outdated time.
                         #That is small but reversing the clock results in sensor data with timestamp out of order.
-                        #SoWe will only update time if the GPS moves times forward. That way sensor data timestamps are consistent
-                        #if fix_last_UTC_update != datetime_gps:
-                           #datetime_offset = datetime_gps - datetime.datetime.now()
-                           #fix_last_UTC_update = datetime_gps
-                        if proposed_datetime_offset > datetime_offset:
+                        #So we will only update time if the GPS moves times forward That way sensor data timestamps are consistent
+                        if proposed_datetime_offset > datetime_offset :
                            datetime_offset = proposed_datetime_offset
 
                         #check that the latitude and longitude appear to be in valid format, sometimes they are not.
@@ -376,16 +364,6 @@ while True:
          except Exception as e:
             logger.error("@IMUN\n{}".format(e))
 
-      #Talk to the GPS one extra time and dont use the data. Ii is not clear but it seems that there is
-      #a buffer building up so we dont always get the latest time/location otherwise.
-      #if gps_connected and interface_rotation == 3: # and hall_button_active==0:
-      #   try:
-      #      if gps.connected is True:
-      #         gps.get_nmea_data()
-      #   except Exception as e:
-      #      logger.error("@GNSS\n{}".format(e))
-
-
       #get keller sensor data
       if keller_connected and interface_rotation ==4:
          #use try except to avoid i2c crash
@@ -394,7 +372,7 @@ while True:
             outside.read()
 
             #approximate depth from pressure. Keller 7LD is rated 3-200bar absolute pressure and reads 1 bar as zero
-            #so depth calculation of less than 20M are likely unreliable
+            #so depth calculation of less than 20M are less accurate
             approx_depth = outside.pressure()*10
 
             #print keller data to stream and any open sensor file
@@ -450,7 +428,7 @@ while True:
    for x in range(6):
       if (hall_confidence[x] >= 15):
          hall_mode = 1 + x
-   #however for special cases such as when currently recording,
+   #however for special cases such as when currently recording video and or writing to a sensor file
    #go back to that previous mode, setup a flag that it needs to wrap up, and let in correctly end processes
    if ((recording or in_mission) and hall_mode != hall_mode_last) : #and hall_mode != 6 and hall_mode!=2):
       hall_mode = hall_mode_last
@@ -479,7 +457,7 @@ while True:
          with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
             print("1" , end="", file=f, flush= True)
 
-
+         #enable wifi
          os.system('sudo ifconfig wlan0 up')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tWifi Mode actvated. three red flashes'.format(time_stamp))
@@ -672,8 +650,8 @@ while True:
             #GNSS data consdiretarions: Since we update all the peripherals elsewhere anyway, we will write down the last stored sensor data in the img sensor file.
             #That is great for battery voltage and for the Keller data, but it's maybe not so great for gpss data which isnt always fresh or available.
             #so if the fix is super recent, write it in the file as per usual. But if the fix is older than 5 seconds, as would be the case in any underwater dive,
-            # we will write the last know location in is a special line GNS2: current datetime, fix age in seconds, and corrdinates
-            # so if super recent fix, write GNSS
+            #we will write the last know location in a special line GNS2: current datetime, fix age in seconds, and coordinates.
+            #So.. if super recent fix, write GNSS
             if fix_achieved_this_runtime == True:
                fix_age = time.time() - fix_time_stamp
                #recent fix, write GNSS
@@ -903,4 +881,5 @@ while True:
       #GPIO.cleanup()
       call("sudo shutdown -h now", shell=True)
       sys.exit()
+
 
