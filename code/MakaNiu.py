@@ -661,6 +661,7 @@ while True:
                else:
                   try:
                      gnss_string_packed = gnss_string.split("\t")
+                     time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("\t","milliseconds")
                      print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(),time_stamp.replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
                   except Exception as e:
                      logger.debug("@GNS2 PHOTO {}\t{}".format(time_stamp, e))
@@ -710,6 +711,7 @@ while True:
                else:
                   try:
                      gnss_string_packed = gnss_string.split("\t")
+                     time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("\t","milliseconds")
                      print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(), time_stamp.replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
                   except Exception as e:
                      logger.debug("@GNS2 PHOTO {}\t{}".format(time_stamp, e))
