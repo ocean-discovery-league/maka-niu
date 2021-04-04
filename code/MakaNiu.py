@@ -394,10 +394,10 @@ while True:
    #after time determined by hdmi_act_led_timeout, disable these perpherals
    #to reduce power consumption (HDMI and ACT LED) and remove light noise (ACT LED)
    if hdmi_enabled == True and (time.time() - hdmi_end_timer > hdmi_act_led_timeout_seconds):
-      os.system('/usr/bin/tvservice -o')
-      os.system('echo none | sudo tee /sys/class/leds/led0/trigger')
-      os.system('echo 0 | sudo tee /sys/class/leds/led0/brightness')
-      logger.debug('Timeout elapsed since start. HDMI and ACT LED disabled.')
+      #os.system('/usr/bin/tvservice -o')
+      #os.system('echo none | sudo tee /sys/class/leds/led0/trigger')
+      #os.system('echo 0 | sudo tee /sys/class/leds/led0/brightness')
+      #logger.debug('Timeout elapsed since start. HDMI and ACT LED disabled.')
       hdmi_enabled = False
 
 
