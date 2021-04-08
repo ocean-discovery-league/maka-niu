@@ -2,7 +2,6 @@
 import logging
 import logging.handlers
 import glob
-#from logging.handlers import RotatingFileHandler
 import datetime
 import time
 from time import sleep
@@ -18,8 +17,8 @@ import spidev
 import qwiic_titan_gps
 import qwiic_icm20948
 from kellerLD import KellerLD
-#import makaniu_config
 import socket
+import re, uuid
 
 ############################################################### FUCNTIONS
 def getBatteryVoltage(vref = 3.3):
@@ -59,7 +58,9 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 ############################################################### SETUP
+
 #control variables: change these as desired
+mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
 serial_number = socket.gethostname()
 mission1_name = "M1" #can be user specified
 mission2_name = "M2" #can be user specified
@@ -71,7 +72,7 @@ video_timelimit_seconds = 900 # 15 minutes
 datetime_offset = datetime.timedelta(0)
 
 #print date time and unit serial number
-logger.debug("Serial number: {}\tPi datetime: {}".format(serial_number, datetime.datetime.now()))
+logger.debug("Serial number: {}\tPi datetime: {}\tMAC: {}".format(serial_number, datetime.datetime.now(), mac_address))
 
 #setup a timer to disable HDMI output, that way for debug it is still possible to connect a screen and end this program before hdmi cuts.
 hdmi_end_timer = time.time()
@@ -527,6 +528,8 @@ while True:
             with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
                print(file_name , end="", file=f)
             sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
+            print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
+
 
             #begin video capture via RPi interface
             os.system('echo ca 1 > /var/www/html/FIFO')
@@ -590,6 +593,7 @@ while True:
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
             print(file_name , end="", file=f)
          sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
+         print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
 
          #restart video recording via RPi interace
          os.system('echo ca 1 > /var/www/html/FIFO')
@@ -647,6 +651,8 @@ while True:
 
          #also create a same named sensor data file and write into it currently available data, and close it right away
          with open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w') as s:
+
+            print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=s)
             #GNSS data consdiretarions: Since we update all the peripherals elsewhere anyway, we will write down the last stored sensor data in the img sensor file.
             #That is great for battery voltage and for the Keller data, but it's maybe not so great for gpss data which isnt always fresh or available.
             #so if the fix is super recent, write it in the file as per usual. But if the fix is older than 5 seconds, as would be the case in any underwater dive,
@@ -697,6 +703,7 @@ while True:
 
          #also create a same named sensor data file and write into it currently available data, and close it right away
          with open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w') as s:
+            print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file= s)
             #GNSS data consdiretarions: Since we update all the peripherals elsewhere anyway, we will write down the last stored sensor data in the img sensor file.
             #That is great for battery voltage and for the Keller data, but it's maybe not so great for gpss data which isnt always fresh or available.
             #so if the fix is super recent, write it in the file as per usual. But if the fix is older than 5 seconds, as would be the case in any underwater dive,
@@ -758,6 +765,7 @@ while True:
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
          file_name = serial_number + "_" + mission1_name + "_" + time_stamp
          sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
+         print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
 
 
          #write status to status file
@@ -822,6 +830,7 @@ while True:
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
          file_name = serial_number + "_" + mission2_name + "_" + time_stamp
          sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
+         print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
 
          #write status to status file
          with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
