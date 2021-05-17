@@ -21,6 +21,7 @@ if __name__ == '__main__':
     # Upload the media to new section "automatic upload test"
     for progress, response in tator.util.upload_media(tator_api, args.type_id, args.media_path, section='Automatic Upload Test'):
         logger.info(f"Upload progress: {progress}%")
+        sys.stdout.flush();
     logger.info(response.message)
 
 #commandline w arguments: python3 ./TatorUpload.py --type_id 28 --media_path /var/www/html/media/[videoNameHere].mp4
