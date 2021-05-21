@@ -26,6 +26,7 @@ if __name__ == '__main__':
             sys.stdout.flush();
         logger.info(response.message)
     else:
+        # see https://www.tator.io/tutorials/2021-05-19-attach-files-to-media/
         media_id = int(args.media_id)
         for progress, response in tator.util.upload_attachment(tator_api, media_id, args.media_path):
             logger.info(f"Upload progress: {progress}%")
