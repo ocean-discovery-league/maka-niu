@@ -3,6 +3,7 @@
 import logging
 import sys
 import tator
+import socket
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -20,8 +21,9 @@ if __name__ == '__main__':
     tator_api = tator.get_api(args.host, '89fe3e220c88ca291e7448a143b83489e16c60d5')
 
     # Upload the media to new section "automatic upload test"
+    hostname = socket.gethostname()
     if not args.media_id:
-        for progress, response in tator.util.upload_media(tator_api, args.type_id, args.media_path, section='Automatic Upload Test'):
+        for progress, response in tator.util.upload_media(tator_api, args.type_id, args.media_path, section=hostname):
             logger.info(f"Upload progress: {progress}%")
             sys.stdout.flush();
         logger.info(response.message)
