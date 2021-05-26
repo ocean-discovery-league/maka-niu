@@ -395,10 +395,10 @@ while True:
    #after time determined by hdmi_act_led_timeout, disable these perpherals
    #to reduce power consumption (HDMI and ACT LED) and remove light noise (ACT LED)
    if hdmi_enabled == True and (time.time() - hdmi_end_timer > hdmi_act_led_timeout_seconds):
-      #os.system('/usr/bin/tvservice -o')
-      #os.system('echo none | sudo tee /sys/class/leds/led0/trigger')
-      #os.system('echo 0 | sudo tee /sys/class/leds/led0/brightness')
-      #logger.debug('Timeout elapsed since start. HDMI and ACT LED disabled.')
+      os.system('/usr/bin/tvservice -o')
+      os.system('echo none | sudo tee /sys/class/leds/led0/trigger')
+      os.system('echo 0 | sudo tee /sys/class/leds/led0/brightness')
+      logger.debug('Timeout elapsed since start. HDMI and ACT LED disabled.')
       hdmi_enabled = False
 
 
@@ -679,7 +679,7 @@ while True:
 
 
       #If the button is continuing to be pressed, continue to take images
-      elif (hall_button_active and (time.time() - photo_burst_time > 0.24)):
+      elif (hall_button_active and (time.time() - photo_burst_time > 0.49)):
 
          #record time in order to time capture instance in photo burst
          photo_burst_time = time.time()
@@ -698,8 +698,8 @@ while True:
 
          #capture image vie RPi interface
          os.system('echo im 1 > /var/www/html/FIFO')
-         logger.debug('*')
          sys.stdout.flush()
+         logger.debug('*')
 
          #also create a same named sensor data file and write into it currently available data, and close it right away
          with open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w') as s:
