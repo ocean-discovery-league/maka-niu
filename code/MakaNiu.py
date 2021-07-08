@@ -71,8 +71,8 @@ video_timelimit_seconds = 900 # 15 minutes
 #To avoid messing with pi's clock, we are creating a UTC datetime offset variable that will be used for timestamping filenames and sensor data
 datetime_offset = datetime.timedelta(0)
 
-#print date time and unit serial number
-logger.debug("Serial number: {}\tPi datetime: {}\tMAC: {}".format(serial_number, datetime.datetime.now(), mac_address))
+#print code version, date time and unit serial number
+logger.debug("Serial number: {}\tPi datetime: {}\tMAC: {}\tCode versin: 1.02".format(serial_number, datetime.datetime.now(), mac_address))
 
 #setup a timer to disable HDMI output, that way for debug it is still possible to connect a screen and end this program before hdmi cuts.
 hdmi_end_timer = time.time()
@@ -219,6 +219,16 @@ batt_string = ""
 kell_string = ""
 imu_string = ""
 
+#setup keller depth offset calibration
+approx_depth = 0
+keller_depth_offset = approx_depth
+if os.path.exists('/home/pi/git/maka-niu/code/log/keller_offset.txt'):
+   k = open('/home/pi/git/maka-niu/code/log/keller_offset.txt', 'r')
+   depth_string = k.readline()
+   keller_depth_offset = float(depth_string)
+   k.close()
+
+
 #If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
 if adc_connected and gps_connected and keller_connected:
    logger.debug('ADC, GPS, and Keller hardware all talking.')
@@ -263,7 +273,7 @@ while True:
 
                         #sometimes the gps gives back the same time multiple times, and so can give slighly outdated time.
                         #That is small but reversing the clock results in sensor data with timestamp out of order.
-                        #So we will only update time if the GPS moves times forward That way sensor data timestamps are consistent
+                        #So we will only update time if the GPS moves times forward, that way sensor data timestamps are consistent
                         if proposed_datetime_offset > datetime_offset :
                            datetime_offset = proposed_datetime_offset
 
@@ -285,6 +295,12 @@ while True:
                            print("GNSS:{}".format(gnss_string))
                            if (recording or in_mission) and sensor_file.closed == False:
                               print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file=sensor_file, flush=True)
+
+                           #write status to status file
+                           keller_depth_offset = keller_depth_offset*0.95 + approx_depth*0.05
+                           with open('/home/pi/git/maka-niu/code/log/keller_offset.txt', 'w') as f:
+                              print("{}".format(keller_depth_offset) , end="", file=f, flush= True)
+
 
          except Exception as e:
             logger.error("@GNSS\n{}".format(e))
@@ -377,7 +393,7 @@ while True:
             approx_depth = outside.pressure()*10
 
             #print keller data to stream and any open sensor file
-            kell_string  = "{}\t{:.2f}\t{:.1f}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),outside.pressure(), approx_depth, outside.temperature())
+            kell_string  = "{}\t{:.2f}\t{:.1f}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),outside.pressure(), approx_depth - keller_depth_offset, outside.temperature())
             print("KELL:{}".format(kell_string))
             sys.stdout.flush()
             if (recording or in_mission) and sensor_file.closed == False:
