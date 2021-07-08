@@ -87,6 +87,8 @@ green = GPIO.PWM(13, 1000) #(pin, freq)
 
 #setup the GPIO pin that enables 3.3V regulator in the BMS board that powers GPS, Keller, IMU.
 GPIO.setup(18, GPIO.OUT)
+#GPIO.output(18, GPIO.LOW) #NOTE: for debug only
+#sleep(0.5)
 GPIO.output(18, GPIO.HIGH) #NOTE: is a mission has long standby time and the peripherals are not needed, one may set this pin low to preserve power
 sleep(0.5)
 
@@ -218,6 +220,7 @@ gnss_string = ""
 batt_string = ""
 kell_string = ""
 imu_string = ""
+clock_updated_this_runtime = False
 
 #setup keller depth offset calibration
 approx_depth = 0
@@ -267,7 +270,7 @@ while True:
                      #check that the date time stamps are in valid format, sometimes they are not. If ok, update the local UTC timestamp offset
                      if isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
 
-                        #if both date and tiem data is good, combine them into one datetime object
+                        #if both date and time data is good, combine them into one datetime object
                         datetime_gps = datetime.datetime.combine(gps.gnss_messages["Date"],gps.gnss_messages["Time"]).replace(microsecond = 0)
                         proposed_datetime_offset = datetime_gps - datetime.datetime.now()
 
@@ -276,6 +279,10 @@ while True:
                         #So we will only update time if the GPS moves times forward, that way sensor data timestamps are consistent
                         if proposed_datetime_offset > datetime_offset :
                            datetime_offset = proposed_datetime_offset
+                           clock_updated_this_runtime = True
+                           logger.debug("Datetime offset set to {} with status A".format(datetime_offset))
+                           logger.debug("Current UTC with offset is {}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-','')))
+
 
                         #check that the latitude and longitude appear to be in valid format, sometimes they are not.
                         if isinstance(gps.gnss_messages["Latitude"],float) and isinstance(gps.gnss_messages["Longitude"],float):
@@ -300,6 +307,22 @@ while True:
                            keller_depth_offset = keller_depth_offset*0.95 + approx_depth*0.05
                            with open('/home/pi/git/maka-niu/code/log/keller_offset.txt', 'w') as f:
                               print("{}".format(keller_depth_offset) , end="", file=f, flush= True)
+
+
+                  #Just once on start up, if we dont have an immediate fix, let's consider still updating the pi clock just once when we get a seemingly valid potential date from the gps
+                  elif clock_updated_this_runtime == False and isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
+
+                     #only doing this once
+                     clock_updated_this_runtime = True
+
+                     #if both date and time data is good, combine them into one datetime object
+                     datetime_gps = datetime.datetime.combine(gps.gnss_messages["Date"],gps.gnss_messages["Time"]).replace(microsecond = 0)
+
+                     #if the retreaved date time is past january 2021, and is newer than the Pi's clock
+                     if datetime_gps > datetime.datetime(2021,1,1) and datetime_gps > datetime.datetime.now():
+                        datetime_offset = datetime_gps - datetime.datetime.now()
+                        logger.debug("Datetime offset set to {} at startup".format(datetime_offset))
+                        logger.debug("Current UTC with offset is {}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-','')))
 
 
          except Exception as e:
@@ -522,7 +545,7 @@ while True:
          with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
             print("2" , end="", file=f, flush= True)
 
-         #os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tVideo Mode activated, press button to begin recording'.format(time_stamp))
 
@@ -625,7 +648,7 @@ while True:
          with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
             print("3" , end="", file=f, flush= True)
 
-         #os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tPicture Mode activated, 5 flashes'.format(time_stamp))
 
@@ -764,7 +787,7 @@ while True:
          in_mission = 1
 
          #disable wifi
-         #os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tMission 1 activated'.format(time_stamp))
          sys.stdout.flush()
@@ -825,7 +848,7 @@ while True:
          in_mission = 2
 
          #disable wifi
-         #os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tMission 2 activated'.format(time_stamp))
          sys.stdout.flush()
