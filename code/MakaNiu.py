@@ -72,7 +72,7 @@ video_timelimit_seconds = 900 # 15 minutes
 datetime_offset = datetime.timedelta(0)
 
 #print code version, date time and unit serial number
-logger.debug("Serial number: {}\tPi datetime: {}\tMAC: {}\tCode versin: 1.02".format(serial_number, datetime.datetime.now(), mac_address))
+logger.debug("Serial number: {}\tPi datetime: {}\tMAC: {}\tCode versin: 1.03".format(serial_number, datetime.datetime.now(), mac_address))
 
 #setup a timer to disable HDMI output, that way for debug it is still possible to connect a screen and end this program before hdmi cuts.
 hdmi_end_timer = time.time()
