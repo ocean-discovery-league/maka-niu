@@ -304,7 +304,7 @@ while True:
                               print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file=sensor_file, flush=True)
 
                            #write status to status file
-                           keller_depth_offset = keller_depth_offset*0.95 + approx_depth*0.05
+                           keller_depth_offset = keller_depth_offset*0.99 + approx_depth*0.01
                            with open('/home/pi/git/maka-niu/code/log/keller_offset.txt', 'w') as f:
                               print("{}".format(keller_depth_offset) , end="", file=f, flush= True)
 
@@ -499,6 +499,7 @@ while True:
 
          #enable wifi
          os.system('sudo ifconfig wlan0 up')
+         os.system('sudo ifconfig ap@wlan0 up')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tWifi Mode actvated. three red flashes'.format(time_stamp))
 
@@ -546,6 +547,7 @@ while True:
             print("2" , end="", file=f, flush= True)
 
          os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig ap@wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tVideo Mode activated, press button to begin recording'.format(time_stamp))
 
@@ -649,6 +651,7 @@ while True:
             print("3" , end="", file=f, flush= True)
 
          os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig ap@wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tPicture Mode activated, 5 flashes'.format(time_stamp))
 
@@ -675,6 +678,8 @@ while True:
             drv.stop()
             drv.sequence[0] = adafruit_drv2605.Effect(74)
             drv.play()
+         else:
+            sleep(0.12)
          red.stop()
 
          #determine time stamp and img file name
@@ -788,6 +793,7 @@ while True:
 
          #disable wifi
          os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig ap@wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tMission 1 activated'.format(time_stamp))
          sys.stdout.flush()
@@ -849,6 +855,7 @@ while True:
 
          #disable wifi
          os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig ap@wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tMission 2 activated'.format(time_stamp))
          sys.stdout.flush()
