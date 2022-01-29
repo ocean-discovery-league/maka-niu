@@ -1,8 +1,9 @@
 #!/bin/bash
 # example start up script which converts any existing .h264 files into MP4
-# Edited by Lui. The trap doesnt always catch the exit, and that causes mayhem since 
+# Edited by Lui. The trap doesnt always catch the exit, and that causes mayhem since
 # since no conversion never resume. Probably brown outs or unexpected shutdowns make this happen.
-# As a hacky solution, the trap has been moved above the directory check, so the locked state is cleared after one reboot.
+# Since startstopX.sh only runs on startup, it seems rational that it needs not worry about the flag.
+# The scrip is revised to run regardless of flag, but still set it spo that the boxing script does get blocked.
 
 MACRODIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 BASEDIR="$( cd "$( dirname "${MACRODIR}" )" >/dev/null 2>&1 && pwd )"
@@ -16,8 +17,8 @@ trap "rm -f -- '$mypidfile'" EXIT
 #Check if script already running
 NOW=`date +"-%Y/%m/%d %H:%M:%S-"`
 if [ -f $mypidfile ]; then
-        echo "${NOW} Script already running..." >> ${mylogfile}
-        exit
+        echo "${NOW} Boxing flag already exists, but because this is a startup script, running anyway. Flag will be cleared when done" >> ${mylogfile}
+#        exit   #LUI: dont exit. easy
 fi
 
 echo $$ > "$mypidfile"

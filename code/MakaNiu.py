@@ -56,7 +56,6 @@ if needRoll:
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
-
 ############################################################### SETUP
 
 #control variables: change these as desired
@@ -137,7 +136,7 @@ i2c = busio.I2C(board.SCL, board.SDA)
 haptic_connected = True
 try:
    drv = adafruit_drv2605.DRV2605(i2c)
-   drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
+   drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solid buzz
    drv.play()
    logger.debug("Haptic feedback device connected")
 except:
@@ -213,6 +212,7 @@ interfaces_time = time.time() # for timing interface comms
 in_mission =0 # either not in a mission, or in mission 1 or 2.
 fix_time_stamp= time.time()
 fix_achieved_this_runtime = False
+fix_is_live = False
 fix_latitude = 0.0
 fix_longitude = 0.0
 fix_last_UTC_update = datetime.datetime.now()
@@ -221,15 +221,18 @@ batt_string = ""
 kell_string = ""
 imu_string = ""
 clock_updated_this_runtime = False
+wifi_enabled = True
+
 
 #setup keller depth offset calibration
 approx_depth = 0
-keller_depth_offset = approx_depth
+keller_depth_offset = 0
 if os.path.exists('/home/pi/git/maka-niu/code/log/keller_offset.txt'):
    k = open('/home/pi/git/maka-niu/code/log/keller_offset.txt', 'r')
    depth_string = k.readline()
    keller_depth_offset = float(depth_string)
    k.close()
+   logger.debug('Initial keller depth offset of {} loaded.'.format(keller_depth_offset))
 
 
 #If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
@@ -265,6 +268,7 @@ while True:
                if gps.get_nmea_data() is True:
                   if (gps.gnss_messages["Status"]) == 'A': # Status 'A' means GPS has a fix
                      #setup a green flash
+                     fix_is_live = True
                      green.start(100)
 
                      #check that the date time stamps are in valid format, sometimes they are not. If ok, update the local UTC timestamp offset
@@ -308,7 +312,6 @@ while True:
                            with open('/home/pi/git/maka-niu/code/log/keller_offset.txt', 'w') as f:
                               print("{}".format(keller_depth_offset) , end="", file=f, flush= True)
 
-
                   #Just once on start up, if we dont have an immediate fix, let's consider still updating the pi clock just once when we get a seemingly valid potential date from the gps
                   elif clock_updated_this_runtime == False and isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
 
@@ -324,6 +327,8 @@ while True:
                         logger.debug("Datetime offset set to {} at startup".format(datetime_offset))
                         logger.debug("Current UTC with offset is {}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-','')))
 
+                  else:
+                     fix_is_live = False
 
          except Exception as e:
             logger.error("@GNSS\n{}".format(e))
@@ -413,10 +418,10 @@ while True:
 
             #approximate depth from pressure. Keller 7LD is rated 3-200bar absolute pressure and reads 1 bar as zero
             #so depth calculation of less than 20M are less accurate
-            approx_depth = outside.pressure()*10
+            approx_depth = outside.pressure()*10 - keller_depth_offset
 
             #print keller data to stream and any open sensor file
-            kell_string  = "{}\t{:.2f}\t{:.1f}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),outside.pressure(), approx_depth - keller_depth_offset, outside.temperature())
+            kell_string  = "{}\t{:.2f}\t{:.1f}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),outside.pressure(), approx_depth, outside.temperature())
             print("KELL:{}".format(kell_string))
             sys.stdout.flush()
             if (recording or in_mission) and sensor_file.closed == False:
@@ -498,6 +503,7 @@ while True:
             print("1" , end="", file=f, flush= True)
 
          #enable wifi
+         wifi_enabled = True
          os.system('sudo ifconfig wlan0 up')
          os.system('sudo ifconfig ap@wlan0 up')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
@@ -529,6 +535,8 @@ while True:
          else:                       #3.4 to 3.0V is about 20-0% charge (pi will autoshutdown at 3V/cell)
             blink_count=1
 
+         logger.debug('Battery check requested. {} flashes'.format(blink_count))
+
          for x in range(blink_count):
             green.start(100)
             sleep(0.5)
@@ -546,8 +554,6 @@ while True:
          with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
             print("2" , end="", file=f, flush= True)
 
-         os.system('sudo ifconfig wlan0 down')
-         os.system('sudo ifconfig ap@wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tVideo Mode activated, press button to begin recording'.format(time_stamp))
 
@@ -557,6 +563,14 @@ while True:
             drv.play()
          red.start(100)
          recording = 0
+
+      #In this mode, if Maka Niu is underwater, diable wifi to save batteries
+      #This way, on land, users can connect to wifi and live stream if desired
+      if (wifi_enabled == True and (fix_is_live == False and approx_depth > 1)):
+         wifi_enabled = False
+         os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig ap@wlan0 down')
+
 
       #if the button is freshly pressed (Here we do not care about continuous press or depress)
       if (hall_button_active != hall_button_last and hall_button_active):
@@ -650,8 +664,6 @@ while True:
          with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
             print("3" , end="", file=f, flush= True)
 
-         os.system('sudo ifconfig wlan0 down')
-         os.system('sudo ifconfig ap@wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tPicture Mode activated, 5 flashes'.format(time_stamp))
 
@@ -664,6 +676,14 @@ while True:
             red.start(100)
             sleep(0.12)
             red.stop()
+
+      #In this mode, if Maka Niu is underwater, diable wifi to save batteries
+      #This way, on land, users can connect to wifi and live stream if desired
+      if (wifi_enabled == True and (fix_is_live == False and approx_depth > 1)):
+         wifi_enabled = False
+         os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig ap@wlan0 down')
+
 
       #If the button is pressed in photo mode, flash the red led, do a short buzz, and take a photo after the led is turned off
       if (hall_button_active and hall_button_active != hall_button_last):
@@ -791,9 +811,6 @@ while True:
          #set flag for mission number
          in_mission = 1
 
-         #disable wifi
-         os.system('sudo ifconfig wlan0 down')
-         os.system('sudo ifconfig ap@wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tMission 1 activated'.format(time_stamp))
          sys.stdout.flush()
@@ -816,6 +833,13 @@ while True:
          #write status to status file
          with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
             print("4 {}.txt".format(file_name) , end="", file=f, flush= True)
+
+      #In this mode, if Maka Niu is underwater, diable wifi to save batteries
+      #This way, on land, users can connect to wifi and live stream if desired
+      if (wifi_enabled == True and (fix_is_live == False and approx_depth > 1)):
+         wifi_enabled = False
+         os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig ap@wlan0 down')
 
 
 
@@ -853,9 +877,6 @@ while True:
          #set flag for mission number
          in_mission = 2
 
-         #disable wifi
-         os.system('sudo ifconfig wlan0 down')
-         os.system('sudo ifconfig ap@wlan0 down')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tMission 2 activated'.format(time_stamp))
          sys.stdout.flush()
@@ -882,6 +903,12 @@ while True:
          with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
             print("5 {}.txt".format(file_name) , end="", file=f, flush= True)
 
+      #In this mode, if Maka Niu is underwater, diable wifi to save batteries
+      #This way, on land, users can connect to wifi and live stream if desired
+      if (wifi_enabled == True and (fix_is_live == False and approx_depth > 1)):
+         wifi_enabled = False
+         os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig ap@wlan0 down')
 
 
      #CODE THAT READS A LINE FROM THE MISSION JSON AND TAKEs ACTION BASED ON THAT.
