@@ -524,15 +524,15 @@ while True:
       #in wifi mode, when the button is pressed, flash the green led a number of times based on battery life 1x for low, 2x for mid, 3x for high
       if (hall_button_active != hall_button_last and hall_button_active):
          blink_count = 1
-         if battery_volt > 3.8*3:    #4.2 to 4.0V is about 100-80% charge
+         if battery_volt > 11.2:    #about 100-80% charge
             blink_count=5
-         elif battery_volt > 3.65*3:  #4.0 to 3.7V is about 80-60% charge
+         elif battery_volt > 10.8:  #about 80-60% charge
             blink_count=4
-         elif battery_volt > 3.5*3:  #3.7 to 3.6V is about 60-40% charge
+         elif battery_volt > 10.4:  #about 60-40% charge
             blink_count=3
-         elif battery_volt > 3.35*3:  #3.6 to 3.4V is about 40-20% charge
+         elif battery_volt > 10:    #about 40-20% charge
             blink_count=2
-         else:                       #3.4 to 3.0V is about 20-0% charge (pi will autoshutdown at 3V/cell)
+         else:                      #about 20-0% charge. Will initiate shutdown at 9V (3V/cell)
             blink_count=1
 
          logger.debug('Battery check requested. {} flashes'.format(blink_count))
