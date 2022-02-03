@@ -1,2 +1,3 @@
 #!/bin/sh
-python3 MakaNiu.py > log/MakaNiu_error_log.txt 2>&1
+
+(date 1>&2 ; ./MakaNiu.py) 2>> log/MakaNiu_error_log.txt
