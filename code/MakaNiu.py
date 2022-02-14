@@ -72,8 +72,11 @@ video_timelimit_seconds = 900 # 15 minutes
 datetime_offset = datetime.timedelta(0)
 
 #print code version, date time and unit serial number
-version = subprocess.check_output(["git", "describe"]).strip()
+version = subprocess.check_output(["git", "describe", "--always"], cwd=os.path.dirname(os.path.abspath(__file__))).strip().decode()
 logger.debug("Serial number: {}\tPi datetime: {}\tMAC: {}\tCode versin: {}".format(serial_number, datetime.datetime.now(), mac_address, version))
+with open('/home/pi/git/maka-niu/code/log/version.txt', 'w') as f:
+   print("{}".format(version), end="", file=f, flush= True)
+
 
 #setup a timer to disable HDMI output, that way for debug it is still possible to connect a screen and end this program before hdmi cuts.
 hdmi_end_timer = time.time()
