@@ -9,6 +9,7 @@ import os
 import RPi.GPIO as GPIO
 import array as arr
 import sys
+import subprocess
 from subprocess import call
 import board
 import busio
@@ -71,7 +72,8 @@ video_timelimit_seconds = 900 # 15 minutes
 datetime_offset = datetime.timedelta(0)
 
 #print code version, date time and unit serial number
-logger.debug("Serial number: {}\tPi datetime: {}\tMAC: {}\tCode versin: 1.03".format(serial_number, datetime.datetime.now(), mac_address))
+version = subprocess.check_output(["git", "describe"]).strip()
+logger.debug("Serial number: {}\tPi datetime: {}\tMAC: {}\tCode versin: {}".format(serial_number, datetime.datetime.now(), mac_address, version))
 
 #setup a timer to disable HDMI output, that way for debug it is still possible to connect a screen and end this program before hdmi cuts.
 hdmi_end_timer = time.time()
