@@ -29,7 +29,7 @@ fi
 #END RASPIMJPEG SECTION
 
 #START MAKANIU MAIN PROGRAM
-python3 /home/pi/git/maka-niu/code/MakaNiu.py > /home/pi/git/maka-niu/code/log/MakaNiu_error_log.txt 2>&1 & 
+(date 1>&2 ; /home/pi/git/maka-niu/code/./MakaNiu.py) 2>> /home/pi/git/maka-niu/code/log/MakaNiu_error_log.txt &
 #END MAKANIU SECTION
 
 exit 0
