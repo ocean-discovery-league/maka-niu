@@ -1,0 +1,69 @@
+The CHG pin and the CHEM pin on LTC4007 should be connected to ground to disable timer termination, and to set final charge voltage at 4.1V to avoid OV states. 
+
+BMS
+Observations:
+-still will cut off charging as it get a little too hot. 
+-for a test, TH2 replaced with 10K resistor. This does prevent the heat trighgered stop, but it's probably not something we want unltimately. 
+TH2 put back. 
+-Root issues is L2 and L3 get too hot. Should study up on inductor efficiency to reduce waste and improve heat dissipation in the PCB with vias and copper planes etc.
+-There was confusion about the hall sensing. It all works when the pi and hall are connected together. 
+-I think the fact that the pi provides ground to the hall sensor was a bad design choice, but I was short on wires I could use.
+-R25 was not soldred properly, fixed and output is now stable off, till cool, and then back on, during overheat shutdown situation. 
+-But this temp power loss is not ok if usign wireless charging, only ok with direct power supply. 
+-
+
+
+Changes:
+-Cut the SHUT_DOWN_SIG line at the charger IC. It does not pull the line high when charging is not in effect( Should add resistor option to pull up this signal)
+-Current limiting resistor set at 0.200ohm, limiting the 15V line to half amp. That measn the 12V line is .625ams, for a charging system running at 7.5W. Sadly this is half of original intent.
+-Should improve thermal dissipation.
+-Can increase PCB size and cover up all the screw holes. Slighly annoying for assembly, but heat management is more important.
+-Make sure R25 is assembled. 
+-Cut the TS_EOC line, believing that it was interfering with charging. Does not appear to be the cause
+-Looking at scope, connection made and then instanly lost. Perhaps cause is inrush current at the boost circuit. Therefore, changing the inrush controlling cap on the BMS. Much imroved but not perfect. 
+-C12 changed from 15nF to 1500nf, which should increse statup time from 1125uS to ~100ms (HEADS UP, BMS# 1 and 3 have 0.22uF caps at C12)
+-Thermistor on the BMS replaced with 10K resistor. Charging now works longer, until it crashes but now I think the cause is heat from the bms affectign the wireless receiver circuit. 
+-Reducer current consumption further by using .300 ohm R_sense. Now can truly a achive continuos charging, expect after 2 hours the charge timer kicks in.
+-Disabled charge timer by shorting CHG pin to gnd
+-A bit earlier, changing the charging rate current sense resistor to achieve higher final charge voltage, since I cut off power when we reach 10% of max possible. 
+-This worked to raise final voltage to 4.15V, but introduced strange behavior that "locked" charging after one attempt. Resistor return to original 0.1 value. How can I get this to work in both situations
+-C19 change to 1uF to increase soft start time. 
+
+-Next: reassemble with thermal separator and reduce current by placing 0.250ohm current limiter, reconnect TS_EOC line
+-Great, can now charge continuously. Let's run 1 hour semi open, then one hour fully closed.
+-REsearch how to reduce heat in the first place. The inductors I used have pretty high resitance, 0.2 ohms, i can get once with quarter that. So I calcualte heat dessipation to be .2W, and I can bring it down to .05W 
+-replaced with new inductors. Some imporvement, but not significant
+-Test TS_EOC, am not understanding why this does not act as expected. Reached out to Renesas.
+-On charger 1, C12 and C19 now 1uF.
+
+-WARNING: Feb2nd 2021: Way too many BMS boards have only one time charge behavior. What gives? Preboost is fine. 
+
+
+
+
+
+
+
+-Total discharge test: ~24 hours with raspidvid running, wifi on
+-Total charge enclosed test: 11 hours when current limiting with 0.3ohm, 5V fan cooling
+-Total discharge test: 1:45PM, X hours, wifi off, recording 30 minute videos in succesion. Boxing enabled so may prevent some videos. 
+-Total charge enclosed test, 5V fan, .25ohm current limit, new thermal pad with higher pressure sandwich, lower height inductors: Started at 2:45PM. end 11:15. Charger current at start is .72amps
+
+
+
+CHARGER BOARD
+Notices: 
+- New board does not flash any LEDS on power up, indicating a major issue
+- Fan is started off the bat, indicating TS not behaving as intended. Noteworthy is that the eval board has TH1 unpopulated, so this coudl easily be the entire problem. NOPE, not that.
+- 5V, 3.3, and 1.8 Volt lines provided by the chip are all good and clean, indicating chip is powered and at least partially functional. 
+- SIGH. This chip is P9242-RBNDGI8 (colloquially P9242-R3 or RB), and it seems we wanted P9242-RNDGI8 aka(but colloquially P9242-R). Pretty dumb 
+- Replaced P9242-R. All good!
+- The circuit that control the fan uses a compartor and it's making the opposite decision. inputs flipped.
+- Cooling fan adjustements: R17 swapped for 12.1Kohm to reduce fan on threshohold. Works but annoying oscilating behavior.
+- added 90K ohm hysterisis resistor. Now very happy with performance, but after some time, would recommend even higher value so that the fan eventually shuts off in idling mode. use 250K
+- Consider charging fan power source to 5V rather than 12V for quiter operation. Current cooling seems excessive.  
+
+SYSTEM WIDE
+next try to limit current of RX board and pump 9W. Yeah, added a 5.1K ohm R at R22 on the RX board, and power transfer does work now, but still cuts out after a few seconds. (currently removed, put it back))
+This shoudl work better now if tested with the BMS with it's own current limiting. 
+Main issue i think is distance between coils and alignment issues. Fixed alignment with pins, but the coil distance is I think over 3mm so work next step make sure coil distance is 2.5 to 3mm. 

@@ -1,0 +1,36 @@
+8274545885539
+custom
+Pi_PinSocket_2x20
+surface-mounted straight socket strip, 2x20, 2.54mm pitch, double cols (from Kicad 4.0.7), script generated
+Surface mounted socket strip SMD 2x20 2.54mm double row
+0
+80
+40
+custom
+SAMTEC_T1M-06-GF-DH
+
+
+0
+14
+14
+custom
+SAMTEC_T1M-06-X-DV
+
+
+0
+14
+14
+custom
+SAMTEC_T1M-10-F-SH-L-K
+
+
+0
+12
+12
+custom
+ref
+Through hole straight socket strip, 2x20, 2.54mm pitch, double cols (from Kicad 4.0.7), script generated
+Through hole socket strip THT 2x20 2.54mm double row
+0
+40
+40

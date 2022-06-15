@@ -1,0 +1,5 @@
+(sym_lib_table
+  (lib (name Maka_BMS-rescue)(type Legacy)(uri ${KIPRJMOD}/Maka_BMS-rescue.lib)(options "")(descr ""))
+  (lib (name Custom)(type Legacy)(uri ${KIPRJMOD}/Custom.lib)(options "")(descr ""))
+  (lib (name mcp3221)(type Legacy)(uri ${KIPRJMOD}/mcp3221.lib)(options "")(descr ""))
+)

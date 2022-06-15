@@ -1,0 +1,5 @@
+(sym_lib_table
+  (lib (name Hall_ring-rescue)(type Legacy)(uri ${KIPRJMOD}/Hall_ring-rescue.lib)(options "")(descr ""))
+  (lib (name T1M-06-X-DV)(type Legacy)(uri ${KIPRJMOD}/T1M-06-X-DV.lib)(options "")(descr ""))
+  (lib (name Custom)(type Legacy)(uri ${KIPRJMOD}/Custom.lib)(options "")(descr ""))
+)

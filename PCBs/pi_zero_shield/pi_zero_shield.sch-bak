@@ -1,0 +1,68 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+Wire Notes Line
+	1800 2300 10100 2300
+Wire Notes Line
+	10100 2300 10100 5150
+Wire Notes Line
+	10100 5150 1800 5150
+Wire Notes Line
+	1800 5150 1800 2300
+$Comp
+L Connector_Generic:Conn_02x20_Odd_Even J?
+U 1 1 61EC6EB2
+P 5950 4650
+F 0 "J?" V 5954 3563 50  0000 R CNN
+F 1 "Conn_02x20_Odd_Even" V 6045 3563 50  0000 R CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_2x20_P2.54mm_Vertical_SMD" H 5950 4650 50  0001 C CNN
+F 3 "~" H 5950 4650 50  0001 C CNN
+	1    5950 4650
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:Buzzer BZ?
+U 1 1 61ED03BA
+P 5950 2800
+F 0 "BZ?" V 6001 2613 50  0000 R CNN
+F 1 "Buzzer" V 5910 2613 50  0000 R CNN
+F 2 "" V 5925 2900 50  0001 C CNN
+F 3 "~" V 5925 2900 50  0001 C CNN
+	1    5950 2800
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x10 J?
+U 1 1 61ED0E16
+P 8050 3500
+F 0 "J?" H 8130 3492 50  0000 L CNN
+F 1 "Conn_01x10" H 8130 3401 50  0000 L CNN
+F 2 "" H 8050 3500 50  0001 C CNN
+F 3 "~" H 8050 3500 50  0001 C CNN
+	1    8050 3500
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x08 J?
+U 1 1 61ED276A
+P 3650 3550
+F 0 "J?" H 3568 2925 50  0000 C CNN
+F 1 "Conn_01x08" H 3568 3016 50  0000 C CNN
+F 2 "" H 3650 3550 50  0001 C CNN
+F 3 "~" H 3650 3550 50  0001 C CNN
+	1    3650 3550
+	-1   0    0    1   
+$EndComp
+$EndSCHEMATC
