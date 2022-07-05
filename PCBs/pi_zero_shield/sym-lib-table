@@ -3,4 +3,5 @@
   (lib (name "T1M-06-GF-DH")(type "KiCad")(uri "${KIPRJMOD}/T1M-06-GF-DH.kicad_sym")(options "")(descr ""))
   (lib (name "T1M-10-F-SH-L-K")(type "KiCad")(uri "${KIPRJMOD}/T1M-10-F-SH-L-K.kicad_sym")(options "")(descr ""))
   (lib (name "T1M-06-X-DV")(type "KiCad")(uri "${KIPRJMOD}/T1M-06-X-DV.kicad_sym")(options "")(descr ""))
+  (lib (name "T1M-10-F-SV-L")(type "KiCad")(uri "${KIPRJMOD}/T1M-10-F-SV-L.kicad_sym")(options "")(descr ""))
 )

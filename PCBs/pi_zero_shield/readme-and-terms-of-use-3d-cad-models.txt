@@ -1,5 +1,5 @@
 ﻿
-EN   Your download at 06/15/2022 on PARTcommunity/PARTserver/3Dfindit.com:
+EN   Your download at 06/17/2022 on PARTcommunity/PARTserver/3Dfindit.com:
 
        Dear user,
        
@@ -7,7 +7,7 @@ EN   Your download at 06/15/2022 on PARTcommunity/PARTserver/3Dfindit.com:
 
        
 
-       STEP, T1M-10-F-SH-L, T1M-10-F-SH-L.stp
+       STEP, T1M-10-F-SV-L, T1M-10-F-SV-L.stp
 	
        Information for use:
 
