@@ -231,13 +231,22 @@ wifi_enabled = True
 
 #setup keller depth offset calibration
 approx_depth = 0
+uncalibrated_depth = 0
 keller_depth_offset = 0
 if os.path.exists('/home/pi/git/maka-niu/code/log/keller_offset.txt'):
-   k = open('/home/pi/git/maka-niu/code/log/keller_offset.txt', 'r')
-   depth_string = k.readline()
-   keller_depth_offset = float(depth_string)
-   k.close()
-   logger.debug('Initial keller depth offset of {} loaded.'.format(keller_depth_offset))
+   with open('/home/pi/git/maka-niu/code/log/keller_offset.txt', 'r+') as k:
+
+      try:
+         depth_string = k.readline()
+         keller_depth_offset = float(depth_string)
+         logger.debug('Initial keller depth offset of {} loaded.'.format(keller_depth_offset))
+
+      except:
+         keller_depth_offset = 0
+         k.seek(0)
+         print("{}".format(keller_depth_offset) , end="", file=k, flush= True)
+         k.truncate()
+         logger.error("Error reading keller offset value. Wrote 0 to offset file")
 
 
 #If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
@@ -313,7 +322,7 @@ while True:
                               print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file=sensor_file, flush=True)
 
                            #write status to status file
-                           keller_depth_offset = keller_depth_offset*0.99 + approx_depth*0.01
+                           keller_depth_offset = keller_depth_offset*0.99 + uncalibrated_depth*0.01
                            with open('/home/pi/git/maka-niu/code/log/keller_offset.txt', 'w') as f:
                               print("{}".format(keller_depth_offset) , end="", file=f, flush= True)
 
@@ -423,7 +432,8 @@ while True:
 
             #approximate depth from pressure. Keller 7LD is rated 3-200bar absolute pressure and reads 1 bar as zero
             #so depth calculation of less than 20M are less accurate
-            approx_depth = outside.pressure()*10 - keller_depth_offset
+            uncalibrated_depth = outside.pressure()*10
+            approx_depth = uncalibrated_depth - keller_depth_offset
 
             #print keller data to stream and any open sensor file
             kell_string  = "{}\t{:.2f}\t{:.1f}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),outside.pressure(), approx_depth, outside.temperature())
