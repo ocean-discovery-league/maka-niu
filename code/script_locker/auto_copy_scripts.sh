@@ -6,6 +6,7 @@
 
 echo moving startstopX.sh
 sudo cp startstopX.sh /var/www/html/macros/startstopX.sh
+sudo cp startstopX.sh /var/www/html/macros/startstop.sh
 echo done
 
 echo moving rc.local
