@@ -50,6 +50,9 @@ hdmi_act_led_timeout_seconds = 90
 battery_low_shutdown_timeout_seconds = 60
 light_timelimit_seconds = 900 # 15 minutes
 
+
+mission1_name = 'M1'
+mission2_name = 'M2'
 #To avoid messing with pi's clock, we are creating a UTC datetime offset variable that will be used for timestamping filenames and sensor data
 datetime_offset = datetime.timedelta(0)
 
@@ -76,7 +79,7 @@ sleep(0.5)
 #If there is a hardware issue, flag it and do not use the feature anymore this runtime.
 battery_low_counter = 0
 battery_volt = 12
-adc_connected = True
+adc_connected = False
 try:
    logger.debug("Starting battery voltage: {}V".format(round(battery_volt,3)))
 
@@ -168,6 +171,8 @@ imu_string = ""
 clock_updated_this_runtime = False
 wifi_enabled = True
 
+gps_connected = False
+haptic_connected = False
 
 #setup keller depth offset calibration
 approx_depth = 0
@@ -191,19 +196,42 @@ logger.debug('Maka LED Program setup complete Entering main forever loop.')
 
 pi=pigpio.pi()
 light = wavePWM.PWM(pi)
-duty_cycle = 1.0
 light.set_frequency(1000)
 
-while duty_cycle > 0.001:
-   light.set_pulse_length_in_fraction(13, 0.5)
-   light.update()
-   sleep(0.01)
-   duty_cycle = duty_cycle*0.99
+
+duty_cycle = 0.025
+light.set_pulse_length_in_fraction(13, duty_cycle)
+light.update()
+sleep(0.5)
+
+duty_cycle = 0.05
+light.set_pulse_length_in_fraction(13, duty_cycle)
+light.update()
+sleep(0.5)
+
+duty_cycle = 0.025
+light.set_pulse_length_in_fraction(13, duty_cycle)
+light.update()
+sleep(0.5)
+
+duty_cycle = 0.05
+light.set_pulse_length_in_fraction(13, duty_cycle)
+light.update()
+sleep(0.5)
+
+duty_cycle = 0.0
+light.set_pulse_length_in_fraction(13, duty_cycle)
+light.update()
+
+
+
+
+
 
 logger.debug('End LED test')
-light.cancel()
-pi.stop()
-exit(0)
+#light.cancel()
+#pi.stop()
+#exit(0)
 
 
 ################################################################# MAIN FOREVER LOOP
@@ -211,7 +239,7 @@ while True:
    #short delay to run at 100hz(actually likely much less due to all the other operations.)
    sleep(0.01)
    #disable green led that gets turned on every second if gps has a fix, this creates a 1 hz green indicator of fix.
-   green.stop()
+   #green.stop()
 
    #every second, update GPS data, battery info, and pressure/temp info. Rotate through tasks to minimize time gaps
    if (time.time() - interfaces_time) > 0.24:
@@ -228,7 +256,7 @@ while True:
                   if (gps.gnss_messages["Status"]) == 'A': # Status 'A' means GPS has a fix
                      #setup a green flash
                      fix_is_live = True
-                     green.start(100)
+    #                 green.start(100)
 
                      #check that the date time stamps are in valid format, sometimes they are not. If ok, update the local UTC timestamp offset
                      if isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
@@ -320,17 +348,17 @@ while True:
                   os.system('echo ca 0 > /var/www/html/FIFO')
                   logger.debug('Ending video capture')
                   sensor_file.close()
-               red.stop()
+     #          red.stop()
 
                #indicate shutdown with LEDS: short then long flash repeated
                for x in range (2):
-                  red.start(100)
+      #            red.start(100)
                   sleep(0.1)
-                  red.stop()
+       #           red.stop()
                   sleep(0.2)
-                  red.start(100)
+        #          red.start(100)
                   sleep(0.4)
-                  red.stop()
+         #         red.stop()
                   sleep(0.2)
                sleep(battery_low_shutdown_timeout_seconds)
 
@@ -444,7 +472,11 @@ while True:
    if (hall_mode == 0 and hall_mode != hall_mode_last):
       print('No hall detected, doing nothing.')
       sys.stdout.flush()
-      red.stop()
+      #red.stop()
+
+      duty_cycle = 0.0
+      light.set_pulse_length_in_fraction(13, duty_cycle)
+      light.update()
 
       #write status to status file
       with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
@@ -468,15 +500,23 @@ while True:
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tWifi Mode actvated. three red flashes'.format(time_stamp))
 
+
+         duty_cycle = 0.02
+         light.set_pulse_length_in_fraction(13, duty_cycle)
+         light.update()
+
+
+
+
          #haptic feedback and led indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
             drv.play()
          for x in range(3):
             sleep(0.2)
-            red.start(100)
+          #  red.start(100)
             sleep(0.2)
-            red.stop()
+           # red.stop()
          if haptic_connected:
             drv.stop()
 
@@ -497,9 +537,9 @@ while True:
          logger.debug('Battery check requested. {} flashes'.format(blink_count))
 
          for x in range(blink_count):
-            green.start(100)
+            #green.start(100)
             sleep(0.5)
-            green.stop()
+            #green.stop()
             sleep(0.2)
 
 
@@ -516,11 +556,16 @@ while True:
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tVideo Mode activated, press button to begin recording'.format(time_stamp))
 
+         duty_cycle = 0.125
+         light.set_pulse_length_in_fraction(13, duty_cycle)
+         light.update()
+
+
          #haptic feedback and led indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58) #58, 64, 95 are good choice transition buzzes
             drv.play()
-         red.start(100)
+         #red.start(100)
          recording = 0
 
       #In this mode, if Maka Niu is underwater, diable wifi to save batteries
@@ -556,7 +601,7 @@ while True:
                drv.stop()
                drv.sequence[0] = adafruit_drv2605.Effect(74) #1
                drv.play()
-            red.stop()
+          #  red.stop()
 
          #Or if recording, end recording
          elif (recording):
@@ -574,7 +619,7 @@ while True:
                drv.stop()
                drv.sequence[0] = adafruit_drv2605.Effect(74) #10 nice double
                drv.play()
-            red.start(100)
+           # red.start(100)
 
       #This bit gets executed if the has been moved away from video mode while a recording was active
       if end_processes_mode_changed_flag:
@@ -626,15 +671,21 @@ while True:
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tPicture Mode activated, 5 flashes'.format(time_stamp))
 
+
+         duty_cycle = 0.250
+         light.set_pulse_length_in_fraction(13, duty_cycle)
+         light.update()
+
+
          #haptic feedback and led indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
          for x in range (5):
             sleep(0.12)
-            red.start(100)
+            #red.start(100)
             sleep(0.12)
-            red.stop()
+            #red.stop()
 
       #In this mode, if Maka Niu is underwater, diable wifi to save batteries
       #This way, on land, users can connect to wifi and live stream if desired
@@ -652,14 +703,14 @@ while True:
          interfaces_time = 0 #this synchronizes interface updates to happen between photos
 
          #haptic feedback and led indication
-         red.start(100)
+         #red.start(100)
          if haptic_connected:
             drv.stop()
             drv.sequence[0] = adafruit_drv2605.Effect(74)
             drv.play()
          else:
             sleep(0.12)
-         red.stop()
+         #red.stop()
 
          #determine time stamp and img file name
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
@@ -774,13 +825,18 @@ while True:
          logger.debug('{}\tMission 1 activated'.format(time_stamp))
          sys.stdout.flush()
 
+         duty_cycle = 0.500
+         light.set_pulse_length_in_fraction(13, duty_cycle)
+         light.update()
+
+
          #haptic feedback and LED indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
-         red.start(100)
+         #red.start(100)
          sleep(0.75)
-         red.stop()
+         #red.stop()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
@@ -840,17 +896,22 @@ while True:
          logger.debug('{}\tMission 2 activated'.format(time_stamp))
          sys.stdout.flush()
 
+         duty_cycle = 0.999
+         light.set_pulse_length_in_fraction(13, duty_cycle)
+         light.update()
+
+
          #haptic feedback and LED indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
-         red.start(100)
+         #red.start(100)
          sleep(0.75)
-         red.stop()
+         #red.stop()
          sleep(0.5)
-         red.start(100)
+         #red.start(100)
          sleep(0.75)
-         red.stop()
+         #red.stop()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
@@ -907,19 +968,26 @@ while True:
          print("6", end="", file=f, flush= True)
 
 
+      duty_cycle = 0.0
+      light.set_pulse_length_in_fraction(13, duty_cycle)
+      light.update()
+      light.cancel()
+      pi.stop()
+
+
       #Haptic feedback and LED indication
       if haptic_connected:
          drv.sequence[0] = adafruit_drv2605.Effect(47)
          drv.play()
-      red.stop()
+      #red.stop()
       for x in range (2): #2 times short then long flashes
-         red.start(100)
+         #red.start(100)
          sleep(0.05)
-         red.stop()
+         #red.stop()
          sleep(0.1)
-         red.start(100)
+         #red.start(100)
          sleep(0.2)
-         red.stop()
+         #red.stop()
          sleep(0.1)
       #GPIO.cleanup()
       call("sudo shutdown -h now", shell=True)
