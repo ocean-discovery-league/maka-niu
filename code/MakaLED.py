@@ -522,15 +522,14 @@ while True:
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
             drv.play()
-         for x in range(3):
 
+         for x in range(3):
             sleep(0.2)
-            #red.start(100)
             duty_cycle = 0.02
             light.set_pulse_length_in_fraction(13, duty_cycle)
             light.update()
+
             sleep(0.2)
-            #red.stop()
             duty_cycle = 0.0
             light.set_pulse_length_in_fraction(13, duty_cycle)
             light.update()
@@ -557,6 +556,18 @@ while True:
             blink_count=1
 
          logger.debug('Battery check requested. {} flashes'.format(blink_count))
+
+         for x in range(blink_count):
+            duty_cycle = 0.02
+            light.set_pulse_length_in_fraction(13, duty_cycle)
+            light.update()
+
+            sleep(0.5)
+            duty_cycle = 0.0
+            light.set_pulse_length_in_fraction(13, duty_cycle)
+            light.update()
+
+            sleep(0.5)
 
          #for x in range(blink_count):
             #green.start(100)
@@ -907,7 +918,7 @@ while True:
          logger.debug('{}\tMission 2 activated'.format(time_stamp))
          sys.stdout.flush()
 
-         target_brightness = .999
+         target_brightness = 0.99
 
 
          #haptic feedback and LED indication
