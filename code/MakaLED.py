@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 import array as arr
 import sys
 import subprocess
-from subprocess import call
+from subprocess import call #, PIPE, Popen
 import board
 import busio
 from kellerLD import KellerLD
@@ -18,6 +18,17 @@ import socket
 import re, uuid
 import pigpio
 import wavePWM
+#from gpiozero import CPUTemperature
+
+
+
+def get_cpu_temperature():
+   try:
+      tFile = open('/sys/class/thermal/thermal_zone0/temp')
+      temp = float(tFile.read())/1000.0
+      return temp
+   except:
+      return 0
 
 
 
@@ -79,13 +90,27 @@ sleep(0.5)
 #If there is a hardware issue, flag it and do not use the feature anymore this runtime.
 battery_low_counter = 0
 battery_volt = 12
-adc_connected = False
+adc_connected = True
 try:
+   i2c = busio.I2C(board.SCL, board.SDA)
+   result = bytearray(2)
+
+   i2c.readfrom_into(0x4e, result)
+   battery_volt = ((result[0] <<8 | result[1]) & 0xFFF) * 0.003223
+   #: 3.3Vref / 4095(12bit) * 4(voltage_divide) = 0.003223
    logger.debug("Starting battery voltage: {}V".format(round(battery_volt,3)))
 
 except:
    logger.error("ADC not connected, SPI Exception")
    adc_connected = False
+
+
+
+
+
+
+
+
 
 if battery_volt < 5 or battery_volt > 15:
    logger.debug("ADC not connected, values out of range.")
@@ -198,37 +223,12 @@ pi=pigpio.pi()
 light = wavePWM.PWM(pi)
 light.set_frequency(1000)
 
-
-duty_cycle = 0.025
-light.set_pulse_length_in_fraction(13, duty_cycle)
-light.update()
-sleep(0.5)
-
-duty_cycle = 0.05
-light.set_pulse_length_in_fraction(13, duty_cycle)
-light.update()
-sleep(0.5)
-
-duty_cycle = 0.025
-light.set_pulse_length_in_fraction(13, duty_cycle)
-light.update()
-sleep(0.5)
-
-duty_cycle = 0.05
-light.set_pulse_length_in_fraction(13, duty_cycle)
-light.update()
-sleep(0.5)
-
-duty_cycle = 0.0
+target_brightness = 0
+duty_cycle = target_brightness
 light.set_pulse_length_in_fraction(13, duty_cycle)
 light.update()
 
 
-
-
-
-
-logger.debug('End LED test')
 #light.cancel()
 #pi.stop()
 #exit(0)
@@ -324,13 +324,22 @@ while True:
       if adc_connected and interface_rotation == 2: # and hall_button_active ==0:
 
          #Get the adc and then since it is a bit noisy, apply a running average
-         reading = getBatteryVoltage()
-         if reading < 15 and reading > 5:
-            battery_volt = battery_volt*0.9 + reading*0.1
+
+         i2c.readfrom_into(0x4e, result)
+         battery_volt = ((result[0] <<8 | result[1]) & 0xFFF) * 0.003223
+
+         #reading = getBatteryVoltage()
+         #if reading < 15 and reading > 5:
+         #   battery_volt = battery_volt*0.9 + reading*0.1
+
+
+
+
 
          #print voltage to stream, and if recording or in mission, also write the voltage to the sensor file
          batt_string = "{}\t{:.2f}".format((datetime.datetime.now()+ datetime_offset).isoformat(sep='\t',timespec='milliseconds').replace(':','').replace('-',''),battery_volt)
-         print("BATT:{}".format(batt_string))
+         print("HARD:{}\t{}".format(batt_string, get_cpu_temperature()))
+
          if (recording or in_mission) and sensor_file.closed == False:
             print("BATT:{}\t{}".format(time.monotonic_ns(), batt_string), file=sensor_file, flush=True)
 
@@ -467,6 +476,12 @@ while True:
       end_processes_mode_changed_flag = 1
 
 
+
+   duty_cycle = duty_cycle*0.99 + target_brightness*0.01
+   light.set_pulse_length_in_fraction(13, duty_cycle)
+   light.update()
+
+
 ####################################################################### MODES
    #No magnet detected, no indication
    if (hall_mode == 0 and hall_mode != hall_mode_last):
@@ -474,9 +489,7 @@ while True:
       sys.stdout.flush()
       #red.stop()
 
-      duty_cycle = 0.0
-      light.set_pulse_length_in_fraction(13, duty_cycle)
-      light.update()
+      target_brightness = 0.0
 
       #write status to status file
       with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
@@ -501,9 +514,6 @@ while True:
          logger.debug('{}\tWifi Mode actvated. three red flashes'.format(time_stamp))
 
 
-         duty_cycle = 0.02
-         light.set_pulse_length_in_fraction(13, duty_cycle)
-         light.update()
 
 
 
@@ -513,10 +523,22 @@ while True:
             drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
             drv.play()
          for x in range(3):
+
             sleep(0.2)
-          #  red.start(100)
+            #red.start(100)
+            duty_cycle = 0.02
+            light.set_pulse_length_in_fraction(13, duty_cycle)
+            light.update()
             sleep(0.2)
-           # red.stop()
+            #red.stop()
+            duty_cycle = 0.0
+            light.set_pulse_length_in_fraction(13, duty_cycle)
+            light.update()
+
+         target_brightness = 0.0
+
+
+
          if haptic_connected:
             drv.stop()
 
@@ -536,11 +558,11 @@ while True:
 
          logger.debug('Battery check requested. {} flashes'.format(blink_count))
 
-         for x in range(blink_count):
+         #for x in range(blink_count):
             #green.start(100)
-            sleep(0.5)
+            #sleep(0.5)
             #green.stop()
-            sleep(0.2)
+            #sleep(0.2)
 
 
 
@@ -556,10 +578,8 @@ while True:
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tVideo Mode activated, press button to begin recording'.format(time_stamp))
 
-         duty_cycle = 0.125
-         light.set_pulse_length_in_fraction(13, duty_cycle)
-         light.update()
 
+         target_brightness = 0.125
 
          #haptic feedback and led indication
          if haptic_connected:
@@ -672,20 +692,12 @@ while True:
          logger.debug('{}\tPicture Mode activated, 5 flashes'.format(time_stamp))
 
 
-         duty_cycle = 0.250
-         light.set_pulse_length_in_fraction(13, duty_cycle)
-         light.update()
-
+         target_brightness =0.250
 
          #haptic feedback and led indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
-         for x in range (5):
-            sleep(0.12)
-            #red.start(100)
-            sleep(0.12)
-            #red.stop()
 
       #In this mode, if Maka Niu is underwater, diable wifi to save batteries
       #This way, on land, users can connect to wifi and live stream if desired
@@ -825,9 +837,8 @@ while True:
          logger.debug('{}\tMission 1 activated'.format(time_stamp))
          sys.stdout.flush()
 
-         duty_cycle = 0.500
-         light.set_pulse_length_in_fraction(13, duty_cycle)
-         light.update()
+
+         target_brightness = .500
 
 
          #haptic feedback and LED indication
@@ -835,7 +846,7 @@ while True:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
          #red.start(100)
-         sleep(0.75)
+         #sleep(0.75)
          #red.stop()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
@@ -896,9 +907,7 @@ while True:
          logger.debug('{}\tMission 2 activated'.format(time_stamp))
          sys.stdout.flush()
 
-         duty_cycle = 0.999
-         light.set_pulse_length_in_fraction(13, duty_cycle)
-         light.update()
+         target_brightness = .999
 
 
          #haptic feedback and LED indication
@@ -906,11 +915,11 @@ while True:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
          #red.start(100)
-         sleep(0.75)
+         #sleep(0.75)
          #red.stop()
-         sleep(0.5)
+         #sleep(0.5)
          #red.start(100)
-         sleep(0.75)
+         #sleep(0.75)
          #red.stop()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
@@ -980,15 +989,15 @@ while True:
          drv.sequence[0] = adafruit_drv2605.Effect(47)
          drv.play()
       #red.stop()
-      for x in range (2): #2 times short then long flashes
+      #for x in range (2): #2 times short then long flashes
          #red.start(100)
-         sleep(0.05)
+         #sleep(0.05)
          #red.stop()
-         sleep(0.1)
+         #sleep(0.1)
          #red.start(100)
-         sleep(0.2)
+         #sleep(0.2)
          #red.stop()
-         sleep(0.1)
+         #sleep(0.1)
       #GPIO.cleanup()
       call("sudo shutdown -h now", shell=True)
       sys.exit()
