@@ -598,8 +598,18 @@ while True:
             with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
                print(file_name , end="", file=f)
             sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
-            print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
 
+            print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
+            #GNSS data considerations: gpss data isnt always fresh or available.
+            #Once at sensor file creation, we will write the last know location in a special line GNS2: current datetime, fix age in seconds, and coordinates.
+            if fix_achieved_this_runtime == True:
+               fix_age = time.time() - fix_time_stamp
+               try:
+                  gnss_string_packed = gnss_string.split("\t")
+                  time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("\t","milliseconds")
+                  print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(),time_stamp.replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = sensor_file, flush = True)
+               except Exception as e:
+                  logger.debug("@GNS2 PHOTO {}\t{}".format(time_stamp, e))
 
             #begin video capture via RPi interface
             os.system('echo ca 1 > /var/www/html/FIFO')
@@ -662,8 +672,22 @@ while True:
          file_name = serial_number + "_" + time_stamp.isoformat("_","milliseconds").replace(':','_').replace('-','_')
          with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
             print(file_name , end="", file=f)
+
          sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
          print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
+         #GNSS data considerations: gpss data isnt always fresh or available.
+         #Once at sensor file creation, we will write the last know location in a special line GNS2: current datetime, fix age in seconds, and coordinates.
+         if fix_achieved_this_runtime == True:
+            fix_age = time.time() - fix_time_stamp
+            try:
+               gnss_string_packed = gnss_string.split("\t")
+               time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("\t","milliseconds")
+               print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(),time_stamp.replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = sensor_file, flush = True)
+            except Exception as e:
+               logger.debug("@GNS2 PHOTO {}\t{}".format(time_stamp, e))
+
+
+
 
          #restart video recording via RPi interace
          os.system('echo ca 1 > /var/www/html/FIFO')
