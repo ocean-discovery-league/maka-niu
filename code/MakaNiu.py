@@ -20,20 +20,10 @@ import qwiic_icm20948
 from kellerLD import KellerLD
 import socket
 import re, uuid
+import pigpio
+import wavePWM
+import math
 
-############################################################### FUCNTIONS
-def getBatteryVoltage(vref = 3.3):
-   msg = 0b11
-   msg = ((msg << 1) + 0) << 5
-   msg = [msg, 0b00000000]
-   reply = spi.xfer2(msg)
-   adc = 0
-   for n in reply:
-      adc = (adc << 8) + n
-   adc = adc >> 1
-   voltage = (vref * adc)/1024
-   pack_voltage = voltage * 4 + 0.3 # adc * voltage + plus diode forward drop
-   return pack_voltage
 
 
 #############################################################SETUP ERROR AND DEBUG LOGGING
@@ -68,6 +58,51 @@ hdmi_act_led_timeout_seconds = 90
 battery_low_shutdown_timeout_seconds = 60
 video_timelimit_seconds = 900 # 15 minutes
 
+
+#Due to changes in hardware, need to know which generation of hardware we are on
+#version can be undefined (original) and we set to 0, or it can be 1, 2 3, etc
+if os.path.exists('/home/pi/git/maka-niu/code/log/hardware_version.txt'):
+   with open('/home/pi/git/maka-niu/code/log/hardware_version.txt', 'r+') as k:
+      try:
+         hardware_string = k.readline()
+         hardware_version = int(hardware_string)
+         logger.debug('hardware version is {}'.format(hardware_string))
+
+      except:
+         hardware_version = 0
+         k.seek(0)
+         print("{}".format(hardware_version) , end="", file=k, flush= True)
+         k.truncate()
+         logger.error("Error reading hardware version. Wrote 0 to version file")
+else:
+   hardware_version = 0
+
+
+############################################################### FUNCTIONS
+if hardware_version == 0:
+   def getBatteryVoltage(vref = 3.3):
+      msg = 0b11
+      msg = ((msg << 1) + 0) << 5
+      msg = [msg, 0b00000000]
+      reply = spi.xfer2(msg)
+      adc = 0
+      for n in reply:
+         adc = (adc << 8) + n
+      adc = adc >> 1
+      voltage = (vref * adc)/1024
+      pack_voltage = voltage * 4 + 0.3 # adc * voltage + plus diode forward drop
+      return pack_voltage
+
+elif hardware_version == 1:
+   def getBatteryVoltage():
+      result = bytearray(2)
+      i2c.readfrom_into(0x4e,result)
+      voltage = ((result[0] <<8 | result[1]) & 0xFFF) * 0.003223
+      #: 3.3Vref / 4095(12bit) * (voltage_divider in hardware) = 0.003223
+      return voltage
+
+
+
 #To avoid messing with pi's clock, we are creating a UTC datetime offset variable that will be used for timestamping filenames and sensor data
 datetime_offset = datetime.timedelta(0)
 
@@ -77,17 +112,120 @@ logger.debug("Serial number: {}\tPi datetime: {}\tMAC: {}\tCode versin: {}".form
 with open('/home/pi/git/maka-niu/code/log/version.txt', 'w') as f:
    print("{}".format(version), end="", file=f, flush= True)
 
-
 #setup a timer to disable HDMI output, that way for debug it is still possible to connect a screen and end this program before hdmi cuts.
 hdmi_end_timer = time.time()
 hdmi_enabled = True
 
-#setup LED pwms pins for feedback
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(12, GPIO.OUT)
-GPIO.setup(13, GPIO.OUT)
-red = GPIO.PWM(12, 1000) #(pin, freq)
-green = GPIO.PWM(13, 1000) #(pin, freq)
+
+if hardware_version ==0:
+   #setup LED pwms pins for feedback
+   GPIO.setmode(GPIO.BCM)
+   GPIO.setup(12, GPIO.OUT)
+   GPIO.setup(13, GPIO.OUT)
+
+   #define ledOn/ledOff with fixed PWM intensity, since we moved away from fades
+   def redOn():   GPIO.output(12,GPIO.HIGH)
+   def redOff():   GPIO.output(12,GPIO.LOW)
+   def greenOn():   GPIO.output(13,GPIO.HIGH)
+   def greenOff():   GPIO.output(13,GPIO.LOW)
+
+   #define buzzer function as pass, since  hardware 0 does not have a buzzer
+   def clickSound(): pass
+   def clickSoundSingle(): pass
+   def buzFadeOn(): pass
+   def buzOn(): pass
+   def buzOff(): pass
+   def buzFadeOff(): pass
+
+
+elif hardware_version ==1:
+   #chooze naming convention
+   GPIO.setmode(GPIO.BCM)
+
+   #setup LED pins
+   GPIO.setup(5, GPIO.OUT)
+   GPIO.setup(6, GPIO.OUT)
+   #set up blink functions
+   def redOn():   GPIO.output(5,GPIO.HIGH)
+   def redOff():   GPIO.output(5,GPIO.LOW)
+   def greenOn():   GPIO.output(6,GPIO.HIGH)
+   def greenOff():   GPIO.output(6,GPIO.LOW)
+
+   #setup audio pins 12 and 13
+   call("sudo pigpiod", shell=True)
+   sleep(0.5)
+   pi = pigpio.pi()
+   buzzer = wavePWM.PWM(pi)
+   buz_volume = 0.01 #this is pulse width out of 1, so not at all the same as dB now really a 0to1 sound bar
+   buz_start_freq = 100
+   buz_end_freq = 200
+   sweep =  buz_end_freq - buz_start_freq
+
+   def clickSoundSingle():
+      buzzer.set_frequency(buz_start_freq)
+      half_cycle_width = buzzer.get_cycle_length()/2
+      buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
+      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+      buzzer.update()
+
+      sleep(0.05)
+      buzzer.set_pulse_start_and_length_in_micros(12,0,0)
+      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
+      buzzer.update()
+
+   def clickSound():
+      buzzer.set_frequency(buz_start_freq)
+      half_cycle_width = buzzer.get_cycle_length()/2
+      buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
+      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+      buzzer.update()
+
+      sleep(0.05)
+      buzzer.set_frequency(buz_end_freq)
+      half_cycle_width = buzzer.get_cycle_length()/2
+      buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
+      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+      buzzer.update()
+
+      sleep(0.05)
+      buzzer.set_pulse_start_and_length_in_micros(12,0,0)
+      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
+      buzzer.update()
+
+   def buzFadeOn():
+      for x in range(-20, 20, 1):
+         sigmund_f = 1/(1+math.exp(-x/4))
+         freq = buz_start_freq + sigmund_f*sweep
+         buzzer.set_frequency(freq)
+         half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
+         buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
+         buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+         buzzer.update()
+
+   def buzFadeOff():
+      for x in range(20, -20, -1):
+         sigmund_f = 1/(1+math.exp(-x/4))
+         freq = buz_start_freq + sigmund_f*sweep
+         buzzer.set_frequency(freq)
+         half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
+         buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
+         buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+         buzzer.update()
+
+   def buzOn():
+      buzzer.set_frequency(buz_end_freq)
+      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
+      buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
+      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+      buzzer.update()
+
+   def buzOff():
+      buzzer.set_pulse_start_and_length_in_micros(12,0,0)
+      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
+      buzzer.update()
+
+else:
+   logger.error("Error, no hardware version has beeb defined")
 
 #setup the GPIO pin that enables 3.3V regulator in the BMS board that powers GPS, Keller, IMU.
 GPIO.setup(18, GPIO.OUT)
@@ -96,20 +234,37 @@ GPIO.setup(18, GPIO.OUT)
 GPIO.output(18, GPIO.HIGH) #NOTE: is a mission has long standby time and the peripherals are not needed, one may set this pin low to preserve power
 sleep(0.5)
 
-#setup SPI for battery ADC via MCP3002 and a 100K/33K voltage divider on the battery pack voltage
+#setup SPI or I2C for battery ADC, depending on hardware
 #If there is a hardware issue, flag it and do not use the feature anymore this runtime.
 battery_low_counter = 0
 battery_volt = 12
 adc_connected = True
-try:
-   spi = spidev.SpiDev(1,2)
-   spi.max_speed_hz = 10000
-   battery_volt = getBatteryVoltage()
-   logger.debug("Starting battery voltage: {}V".format(round(battery_volt,3)))
 
-except:
-   logger.error("ADC not connected, SPI Exception")
-   adc_connected = False
+if hardware_version == 0:
+   try:
+      spi = spidev.SpiDev(1,2)
+      spi.max_speed_hz = 10000
+      battery_volt = getBatteryVoltage()
+      logger.debug("Starting battery voltage: {}V".format(round(battery_volt,3)))
+   except:
+      logger.error("ADC not connected, SPI Exception")
+      adc_connected = False
+
+elif hardware_version == 1:
+   try:
+      i2c = busio.I2C(board.SCL, board.SDA)
+      #result = bytearray(2)
+      #i2c.readfrom_into(0x4e,result)
+      battery_volt = getBatteryVoltage()
+      #battery_volt = ((result[0] <<8 | result[1]) &0xFFF) * 0.003223
+      logger.debug("Starting battery voltage: {}V".format(round(battery_volt,3)))
+   except:
+      logger.error("ADC not connected, I2C Exception")
+      adc_connected = False
+
+
+
+
 
 if battery_volt < 5 or battery_volt > 15:
    logger.debug("ADC not connected, values out of range.")
@@ -120,15 +275,20 @@ if battery_volt < 5 or battery_volt > 15:
 if battery_volt < 9.0:
    logger.debug('Batteries critically low, initiating shutdown in 60 seconds.')
    sys.stdout.flush()
-   red.stop()
+
+   redOff()
    for x in range (2): #2 short then long flashes
-      red.start(100)
+      redOn()
+      buzOn()
       sleep(0.1)
-      red.stop()
+      redOff()
+      buzOff()
       sleep(0.2)
-      red.start(100)
+      redOn()
+      buzOn()
       sleep(0.4)
-      red.stop()
+      redOff()
+      buzOff()
       sleep(0.2)
    sleep(battery_low_shutdown_timeout_seconds)
    GPIO.cleanup()
@@ -252,10 +412,12 @@ if os.path.exists('/home/pi/git/maka-niu/code/log/keller_offset.txt'):
 #If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
 if adc_connected and gps_connected and keller_connected:
    logger.debug('ADC, GPS, and Keller hardware all talking.')
-   green.start(100)
+   greenOn()
+   buzOn()
    sleep(3)
-red.stop()
-green.stop()
+redOff()
+greenOff()
+buzOff()
 
 #Print to stream that setup is over
 logger.debug('Maka Niu Program setup complete Entering main forever loop.')
@@ -266,7 +428,8 @@ while True:
    #short delay to run at 100hz(actually likely much less due to all the other operations.)
    sleep(0.01)
    #disable green led that gets turned on every second if gps has a fix, this creates a 1 hz green indicator of fix.
-   green.stop()
+   greenOff()
+   #buzOff()
 
    #every second, update GPS data, battery info, and pressure/temp info. Rotate through tasks to minimize time gaps
    if (time.time() - interfaces_time) > 0.24:
@@ -283,7 +446,7 @@ while True:
                   if (gps.gnss_messages["Status"]) == 'A': # Status 'A' means GPS has a fix
                      #setup a green flash
                      fix_is_live = True
-                     green.start(100)
+                     greenOn()
 
                      #check that the date time stamps are in valid format, sometimes they are not. If ok, update the local UTC timestamp offset
                      if isinstance(gps.gnss_messages["Date"], datetime.date) and isinstance(gps.gnss_messages["Time"], datetime.time):
@@ -375,17 +538,17 @@ while True:
                   os.system('echo ca 0 > /var/www/html/FIFO')
                   logger.debug('Ending video capture')
                   sensor_file.close()
-               red.stop()
+               redOff()
 
                #indicate shutdown with LEDS: short then long flash repeated
                for x in range (2):
-                  red.start(100)
+                  redOn()
                   sleep(0.1)
-                  red.stop()
+                  redOff()
                   sleep(0.2)
-                  red.start(100)
+                  redOn()
                   sleep(0.4)
-                  red.stop()
+                  redOff()
                   sleep(0.2)
                sleep(battery_low_shutdown_timeout_seconds)
 
@@ -500,12 +663,11 @@ while True:
    if (hall_mode == 0 and hall_mode != hall_mode_last):
       print('No hall detected, doing nothing.')
       sys.stdout.flush()
-      red.stop()
-
+      redOff()
+      buzOff()
       #write status to status file
       with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
           print("0" , end="", file=f, flush= True)
-
 
 
    #Magnet at Wifi Mode
@@ -530,14 +692,17 @@ while True:
             drv.play()
          for x in range(3):
             sleep(0.2)
-            red.start(100)
+            redOn()
+            buzOn()
             sleep(0.2)
-            red.stop()
+            redOff()
+            buzOff()
          if haptic_connected:
             drv.stop()
 
       #in wifi mode, when the button is pressed, flash the green led a number of times based on battery life 1x for low, 2x for mid, 3x for high
       if (hall_button_active != hall_button_last and hall_button_active):
+         clickSound()
          blink_count = 1
          if battery_volt > 11.2:    #about 100-80% charge
             blink_count=5
@@ -553,9 +718,9 @@ while True:
          logger.debug('Battery check requested. {} flashes'.format(blink_count))
 
          for x in range(blink_count):
-            green.start(100)
+            greenOn()
             sleep(0.5)
-            green.stop()
+            greenOff()
             sleep(0.2)
 
 
@@ -576,7 +741,10 @@ while True:
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58) #58, 64, 95 are good choice transition buzzes
             drv.play()
-         red.start(100)
+         redOn()
+         buzFadeOn()
+         #sleep(1)
+         buzFadeOff()
          recording = 0
 
       #In this mode, if Maka Niu is underwater, diable wifi to save batteries
@@ -589,6 +757,7 @@ while True:
 
       #if the button is freshly pressed (Here we do not care about continuous press or depress)
       if (hall_button_active != hall_button_last and hall_button_active):
+         clickSound()
 
          #If not recording, begin recording.
          if (recording == 0):
@@ -622,7 +791,7 @@ while True:
                drv.stop()
                drv.sequence[0] = adafruit_drv2605.Effect(74) #1
                drv.play()
-            red.stop()
+            redOff()
 
          #Or if recording, end recording
          elif (recording):
@@ -640,7 +809,7 @@ while True:
                drv.stop()
                drv.sequence[0] = adafruit_drv2605.Effect(74) #10 nice double
                drv.play()
-            red.start(100)
+            redOn()
 
       #This bit gets executed if the has been moved away from video mode while a recording was active
       if end_processes_mode_changed_flag:
@@ -653,7 +822,6 @@ while True:
          recording = 0
          sensor_file.close()
          end_processes_mode_changed_flag = 0
-
          #there is no LED or haptic feedback in this scenario
 
       #We are limiting video files to fixed max length segments. If the length reaches the timelimit, stop the recording, and start a new one
@@ -712,9 +880,11 @@ while True:
             drv.play()
          for x in range (5):
             sleep(0.12)
-            red.start(100)
+            redOn()
+            buzOn()
             sleep(0.12)
-            red.stop()
+            redOff()
+            buzOff()
 
       #In this mode, if Maka Niu is underwater, diable wifi to save batteries
       #This way, on land, users can connect to wifi and live stream if desired
@@ -732,14 +902,16 @@ while True:
          interfaces_time = 0 #this synchronizes interface updates to happen between photos
 
          #haptic feedback and led indication
-         red.start(100)
+         redOn()
          if haptic_connected:
             drv.stop()
             drv.sequence[0] = adafruit_drv2605.Effect(74)
             drv.play()
+            clickSound()
          else:
+            clickSound()
             sleep(0.12)
-         red.stop()
+         redOff()
 
          #determine time stamp and img file name
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
@@ -792,6 +964,7 @@ while True:
             drv.stop()
             drv.sequence[0] = adafruit_drv2605.Effect(17) #17 for solid click , 80 for short vib
             drv.play()
+         clickSoundSingle()
 
          #determine time stamp and filename.
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
@@ -858,9 +1031,11 @@ while True:
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
-         red.start(100)
+         redOn()
+         buzOn()
          sleep(0.75)
-         red.stop()
+         redOff()
+         buzOff()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
@@ -924,13 +1099,17 @@ while True:
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
-         red.start(100)
+         redOn()
+         buzOn()
          sleep(0.75)
-         red.stop()
+         redOff()
+         buzOff()
          sleep(0.5)
-         red.start(100)
+         redOn()
+         buzOn()
          sleep(0.75)
-         red.stop()
+         redOff()
+         buzOff()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
@@ -991,15 +1170,19 @@ while True:
       if haptic_connected:
          drv.sequence[0] = adafruit_drv2605.Effect(47)
          drv.play()
-      red.stop()
+      redOff()
       for x in range (2): #2 times short then long flashes
-         red.start(100)
+         redOn()
+         buzOn()
          sleep(0.05)
-         red.stop()
+         redOff()
+         buzOff()
          sleep(0.1)
-         red.start(100)
+         redOn()
+         buzOn()
          sleep(0.2)
-         red.stop()
+         redOff()
+         buzOff()
          sleep(0.1)
       #GPIO.cleanup()
       call("sudo shutdown -h now", shell=True)
