@@ -24,6 +24,13 @@ echo moving raspimjpeg to the macros folder
 sudo cp raspimjpeg /var/www/html/raspimjpeg
 echo done
 
+echo moving dnsmasq.conf LED version to the etc folder to determine static ip
+sudo cp dnsmasq_LED.conf /etc/dnsmasq.conf
+echo done
+
+echo moving dhcpcd.conf LED version to the etc folder to determine static ip
+sudo cp dhcpcd_LED.conf /etc/dhcpcd.conf
+echo done
 
 
 

@@ -17,7 +17,7 @@ echo moving config.txt
 sudo cp config.txt /boot/config.txt
 echo done
 
-echo moving board.py
+echo moving boards.py
 sudo cp boards.py /usr/local/lib/python3.7/dist-packages/adafruit_platformdetect/constants/boards.py
 echo done
 
@@ -25,6 +25,13 @@ echo moving raspimjpeg to the macros folder
 sudo cp raspimjpeg /var/www/html/raspimjpeg
 echo done
 
+echo moving dnsmasq.conf, that gives statics ip to the etc folder
+sudo cp dnsmasq.conf /etc/dnsmasq.conf
+echo done
+
+echo moving dhcpcd.conf, that also gives statics ip to the etc folder
+sudo cp dhcpcd.conf /etc/dhcpcd.conf
+echo done
 
 
 

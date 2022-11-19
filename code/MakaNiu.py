@@ -132,10 +132,10 @@ if hardware_version ==0:
    #define buzzer function as pass, since  hardware 0 does not have a buzzer
    def clickSound(): pass
    def clickSoundSingle(): pass
-   def buzFadeOn(): pass
+   def buzFadeOn(): sleep(0.325)
    def buzOn(): pass
    def buzOff(): pass
-   def buzFadeOff(): pass
+   def buzFadeOff(): sleep(0.325)
 
 
 elif hardware_version ==1:
@@ -151,7 +151,10 @@ elif hardware_version ==1:
    def greenOn():   GPIO.output(6,GPIO.HIGH)
    def greenOff():   GPIO.output(6,GPIO.LOW)
 
-   #setup audio pins 12 and 13
+   #setup audio pins 12 and 13. 13 will be driven with PWM using pigpio process, 12 will just be pulled to ground.
+   GPIO.setup(12, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) #buzzer low side, also physically wired to ground
+
+   #setup pigpiod
    call("sudo pigpiod", shell=True)
    sleep(0.5)
    pi = pigpio.pi()
@@ -161,66 +164,60 @@ elif hardware_version ==1:
    buz_end_freq = 200
    sweep =  buz_end_freq - buz_start_freq
 
+
    def clickSoundSingle():
       buzzer.set_frequency(buz_start_freq)
-      half_cycle_width = buzzer.get_cycle_length()/2
-      buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
+      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
       buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
       buzzer.update()
-
       sleep(0.05)
-      buzzer.set_pulse_start_and_length_in_micros(12,0,0)
       buzzer.set_pulse_start_and_length_in_micros(13,0,0)
       buzzer.update()
 
    def clickSound():
       buzzer.set_frequency(buz_start_freq)
-      half_cycle_width = buzzer.get_cycle_length()/2
-      buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
+      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
       buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
       buzzer.update()
 
       sleep(0.05)
       buzzer.set_frequency(buz_end_freq)
-      half_cycle_width = buzzer.get_cycle_length()/2
-      buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
+      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
       buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
       buzzer.update()
 
       sleep(0.05)
-      buzzer.set_pulse_start_and_length_in_micros(12,0,0)
       buzzer.set_pulse_start_and_length_in_micros(13,0,0)
       buzzer.update()
 
    def buzFadeOn():
-      for x in range(-20, 20, 1):
-         sigmund_f = 1/(1+math.exp(-x/4))
+      for x in range(-10, 10, 1):
+         sigmund_f = 1/(1+math.exp(-x/2))
          freq = buz_start_freq + sigmund_f*sweep
          buzzer.set_frequency(freq)
          half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
-         buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
          buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
          buzzer.update()
 
    def buzFadeOff():
-      for x in range(20, -20, -1):
-         sigmund_f = 1/(1+math.exp(-x/4))
+      for x in range(10, -10, -1):
+         sigmund_f = 1/(1+math.exp(-x/2))
          freq = buz_start_freq + sigmund_f*sweep
          buzzer.set_frequency(freq)
          half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
-         buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
          buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
          buzzer.update()
+      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
+      buzzer.update()
+
 
    def buzOn():
       buzzer.set_frequency(buz_end_freq)
       half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
-      buzzer.set_pulse_start_and_length_in_micros(12,0,half_cycle_width)
       buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
       buzzer.update()
 
    def buzOff():
-      buzzer.set_pulse_start_and_length_in_micros(12,0,0)
       buzzer.set_pulse_start_and_length_in_micros(13,0,0)
       buzzer.update()
 
@@ -307,6 +304,10 @@ try:
 except:
    logger.error("Haptic feedback not connected. Exception")
    haptic_connected = False
+buzOn()
+sleep(0.5)
+buzOff()
+
 
 #setup i2c for GPS
 #If there is a hardware issue, flag it and do not use the feature anymore this runtime.
@@ -742,9 +743,9 @@ while True:
             drv.sequence[0] = adafruit_drv2605.Effect(58) #58, 64, 95 are good choice transition buzzes
             drv.play()
          redOn()
-         buzFadeOn()
-         #sleep(1)
-         buzFadeOff()
+         buzOn()
+         sleep(1.5)
+         buzOff()
          recording = 0
 
       #In this mode, if Maka Niu is underwater, diable wifi to save batteries
@@ -757,7 +758,6 @@ while True:
 
       #if the button is freshly pressed (Here we do not care about continuous press or depress)
       if (hall_button_active != hall_button_last and hall_button_active):
-         clickSound()
 
          #If not recording, begin recording.
          if (recording == 0):
@@ -792,6 +792,7 @@ while True:
                drv.sequence[0] = adafruit_drv2605.Effect(74) #1
                drv.play()
             redOff()
+            clickSound()
 
          #Or if recording, end recording
          elif (recording):
@@ -810,6 +811,7 @@ while True:
                drv.sequence[0] = adafruit_drv2605.Effect(74) #10 nice double
                drv.play()
             redOn()
+            clickSound()
 
       #This bit gets executed if the has been moved away from video mode while a recording was active
       if end_processes_mode_changed_flag:
@@ -1033,9 +1035,9 @@ while True:
             drv.play()
          redOn()
          buzOn()
-         sleep(0.75)
-         redOff()
+         sleep(0.5)
          buzOff()
+         redOff()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
@@ -1101,15 +1103,15 @@ while True:
             drv.play()
          redOn()
          buzOn()
-         sleep(0.75)
-         redOff()
+         sleep(0.5)
          buzOff()
+         redOff()
          sleep(0.5)
          redOn()
          buzOn()
-         sleep(0.75)
-         redOff()
+         sleep(0.5)
          buzOff()
+         redOff()
 
          #At start of mission, determine time stamp, and create a mission sensor datafile.
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
