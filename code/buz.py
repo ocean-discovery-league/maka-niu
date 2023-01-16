@@ -28,8 +28,8 @@ try:
 
       cl = pwm.get_cycle_length()
 
-      pwm.set_pulse_start_and_length_in_micros(12, 0, cl/2)
-#      pwm.set_pulse_start_and_length_in_micros(13, cl/2 , cl/2)
+#      pwm.set_pulse_start_and_length_in_micros(12, 0, cl/2)
+      pwm.set_pulse_start_and_length_in_micros(13, cl/2 , cl/2)
 
       pwm.update()
       time.sleep(0.5)

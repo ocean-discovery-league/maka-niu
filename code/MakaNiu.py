@@ -159,9 +159,9 @@ elif hardware_version ==1:
    sleep(0.5)
    pi = pigpio.pi()
    buzzer = wavePWM.PWM(pi)
-   buz_volume = 0.01 #this is pulse width out of 1, so not at all the same as dB now really a 0to1 sound bar
-   buz_start_freq = 100
-   buz_end_freq = 200
+   buz_volume = 1.0 #this is pulse width out of 1, so not at all the same as dB now really a 0to1 sound bar
+   buz_start_freq = 1000
+   buz_end_freq = 2000
    sweep =  buz_end_freq - buz_start_freq
 
 
