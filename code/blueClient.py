@@ -1,5 +1,6 @@
 #!/usr/bin/sudo /usr/bin/python3
 from bluedot.btcomm import BluetoothClient
+#from bluedot.btcomm import BluetoothAdapter
 from signal import pause
 from time import sleep
 import datetime
@@ -23,8 +24,13 @@ red = GPIO.PWM(12,1000)
 green = GPIO.PWM(13,1000)
 
 
-
-c = BluetoothClient("mkn0002", data_received)
+a = BluetoothAdapter()
+devices = a.paired_devices
+for d in devices:
+   device_address = d[0]
+   device_name = d[1]
+print(device_name)
+c = BluetoothClient("LIT0002", data_received)
 
 
 while 1:

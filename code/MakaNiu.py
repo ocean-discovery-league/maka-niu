@@ -24,6 +24,7 @@ import pigpio
 import wavePWM
 import math
 from bluedot.btcomm import BluetoothClient
+from bluedot.btcomm import BluetoothAdapter
 
 
 #############################################################SETUP ERROR AND DEBUG LOGGING
@@ -267,15 +268,17 @@ elif hardware_version == 1:
 #get the name of a potential bluetooth device to pair with
 bt_connected = False
 bt_connected_this_run = False
-bt_device = ""
-if os.path.exists('/home/pi/git/maka-niu/code/log/bluetooth_paired_device.txt'):
-   with open('/home/pi/git/maka-niu/code/log/bluetooth_paired_device.txt', 'r+') as f:
-      try:
-         string = f.readline()
-         bt_device = string.strip()
-         logger.debug('Read blue string is {}'.format(bt_device))
-      except:
-         logger.error("Error reading file")
+bt_device_name = ""
+try:
+   bta = BluetoothAdapter()
+   bt_devices = bta.paired_devices
+   for d in bt_devices:
+      bt_device_address = d[0]
+      bt_device_name = d[1].strip()
+      logger.debug('Bluetooth device listed as paired\t{}\t{}'.format(bt_device_address, bt_device_name))
+except:
+   logger.error("No bluetooth device listes as paired")
+
 
 if battery_volt < 5 or battery_volt > 15:
    logger.debug("ADC not connected, values out of range.")
@@ -742,15 +745,14 @@ while True:
          #aftre indicating battery level, attempt to open a bluetooth connection
          if bt_connected_this_run:
             bt_connected = bt.connected
-         if bt_device and bt_connected == False:
+         if bt_device_name and bt_connected == False:
                try:
-                  bt = BluetoothClient(bt_device, data_received)
+                  bt = BluetoothClient(bt_device_name, data_received)
                   bt_connected_this_run = True
                   bt_connected =  True
                   #request 1 second of light to indicatite succes
                   bt.send("1")
-
-                  logger.debug('Established bluetooth connection to {}'.format(bt_device))
+                  logger.debug('Established bluetooth connection to {}'.format(bt_device_name))
                except:
                   logger.error("Couldnt connect to listed bluetooth device")
 
