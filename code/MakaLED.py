@@ -18,8 +18,11 @@ import socket
 import re, uuid
 import pigpio
 import wavePWM
+from bluedot.btcomm import BluetoothServer
 #from gpiozero import CPUTemperature
 
+light_duration = 0
+light_request_time = time.time()
 
 
 def get_cpu_temperature():
@@ -31,6 +34,19 @@ def get_cpu_temperature():
       return 0
 
 
+def data_received(data):
+   #print(data)
+   #try:
+   global light_duration
+   light_duration = float(data)
+   print(light_duration)
+      #camera_module.send("OK: " + light_duration)
+   global light_request_time
+   light_request_time = time.time()
+
+   #except:
+      #light_duration = 0
+      #camera_module.send("Sorry, what?")
 
 #############################################################SETUP ERROR AND DEBUG LOGGING
 #name of the next log file
@@ -107,11 +123,6 @@ except:
 
 
 
-
-
-
-
-
 if battery_volt < 5 or battery_volt > 15:
    logger.debug("ADC not connected, values out of range.")
    adc_connected = False
@@ -156,6 +167,18 @@ try:
 except:
    imu_connected = False
    logger.error("IMU sensor not connected. Exception")
+
+
+
+bluetooth_server_running = False
+try:
+   camera_module = BluetoothServer(data_received)
+   logger.debug("Bluetooth server setup")
+   bluetooth_server_running = True
+except:
+   logger.debug("Bluetooth server fail")
+
+
 
 #setup hall sensor GPIO pins. All pulled up, so active is when low
 GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP)  #push button
@@ -209,11 +232,6 @@ if os.path.exists('/home/pi/git/maka-niu/code/log/keller_offset.txt'):
    k.close()
    logger.debug('Initial keller depth offset of {} loaded.'.format(keller_depth_offset))
 
-
-#If all the hardware interfaces appear to be functioning, turn the green len on for 3 seconds
-#if adc_connected and gps_connected and keller_connected:
-#   logger.debug('??? hardware all talking.')
-#   sleep(3)
 
 #Print to stream that setup is over
 logger.debug('Maka LED Program setup complete Entering main forever loop.')
@@ -477,9 +495,10 @@ while True:
 
 
 
-   duty_cycle = duty_cycle*0.99 + target_brightness*0.01
+   duty_cycle = duty_cycle*0.98 + target_brightness*0.02
    light.set_pulse_length_in_fraction(13, duty_cycle)
    light.update()
+
 
 
 ####################################################################### MODES
@@ -513,11 +532,6 @@ while True:
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
          logger.debug('{}\tWifi Mode actvated. three red flashes'.format(time_stamp))
 
-
-
-
-
-
          #haptic feedback and led indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solif buzz
@@ -536,10 +550,20 @@ while True:
 
          target_brightness = 0.0
 
-
-
          if haptic_connected:
             drv.stop()
+
+      if bluetooth_server_running:
+         if (time.time() - light_request_time) < light_duration:
+            target_brightness = 0.5
+            #light.set_pulse_length_in_fraction(13, 0.5)
+            #light.update()
+         else:
+            target_brightness = 0.0
+            #logger.debug('*')
+            #light.set_pulse_length_in_fraction(13, 0.0)
+            #light.update()
+
 
       #in wifi mode, when the button is pressed, flash the green led a number of times based on battery life 1x for low, 2x for mid, 3x for high
       if (hall_button_active != hall_button_last and hall_button_active):
@@ -569,143 +593,19 @@ while True:
 
             sleep(0.5)
 
-         #for x in range(blink_count):
-            #green.start(100)
-            #sleep(0.5)
-            #green.stop()
-            #sleep(0.2)
 
-
-
-   #Magnet at Video Mode
+   #Magnet at Brightness 1
    if (hall_mode == 2):
-      #When initially entering mode: Disable wifi, turn on red led, and buzz
+      #When initially entering mode: Disable wifi, do a long red flash, buzz, and create mission duration sensor data file
       if (hall_mode != hall_mode_last):
 
-         #write status to status file
-         with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
-            print("2" , end="", file=f, flush= True)
-
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
-         logger.debug('{}\tVideo Mode activated, press button to begin recording'.format(time_stamp))
+         logger.debug('{}\tBrightness 1 activated'.format(time_stamp))
+         sys.stdout.flush()
 
+         target_brightness = .125
 
-         target_brightness = 0.125
-
-         #haptic feedback and led indication
-         if haptic_connected:
-            drv.sequence[0] = adafruit_drv2605.Effect(58) #58, 64, 95 are good choice transition buzzes
-            drv.play()
-         #red.start(100)
-         recording = 0
-
-      #In this mode, if Maka Niu is underwater, diable wifi to save batteries
-      #This way, on land, users can connect to wifi and live stream if desired
-      if (wifi_enabled == True and (fix_is_live == False and approx_depth > 1)):
-         wifi_enabled = False
-         os.system('sudo ifconfig wlan0 down')
-         os.system('sudo ifconfig ap@wlan0 down')
-
-
-      #if the button is freshly pressed (Here we do not care about continuous press or depress)
-      if (hall_button_active != hall_button_last and hall_button_active):
-
-         #If not recording, begin recording.
-         if (recording == 0):
-            #1st determine time stamp, video file name, and create same named sensor data file
-            time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
-            file_name = serial_number + "_" + time_stamp
-            with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-               print(file_name , end="", file=f)
-            sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
-            print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
-
-
-            #begin video capture via RPi interface
-            os.system('echo ca 1 > /var/www/html/FIFO')
-            logger.debug('{}\tStarting video capture: {}'.format(time_stamp,file_name))
-            recording = 1
-            video_started_time = time.time()
-
-            #haptif feedback short buzz and turn off red led
-            if haptic_connected:
-               drv.stop()
-               drv.sequence[0] = adafruit_drv2605.Effect(74) #1
-               drv.play()
-          #  red.stop()
-
-         #Or if recording, end recording
-         elif (recording):
-            #end recordign via RPi interface
-            os.system('echo ca 0 > /var/www/html/FIFO')
-            time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
-            logger.debug('{}\tEnding video capture'.format(time_stamp))
-
-            #cleanup, clear recording flag and close the sensor data file
-            recording = 0
-            sensor_file.close()
-
-            #haptic feedback short buzz and turn the red led back on
-            if haptic_connected:
-               drv.stop()
-               drv.sequence[0] = adafruit_drv2605.Effect(74) #10 nice double
-               drv.play()
-           # red.start(100)
-
-      #This bit gets executed if the has been moved away from video mode while a recording was active
-      if end_processes_mode_changed_flag:
-         #end recordign via RPi interface
-         os.system('echo ca 0 > /var/www/html/FIFO')
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
-         logger.debug('{}\tLeft Camera mode, ending video capture'.format(time_stamp))
-
-         #cleanup, clear recording flag and close the sensor data file
-         recording = 0
-         sensor_file.close()
-         end_processes_mode_changed_flag = 0
-
-         #there is no LED or haptic feedback in this scenario
-
-      #We are limiting video files to fixed max length segments. If the length reaches the timelimit, stop the recording, and start a new one
-      if (recording and (time.time()-video_started_time) > video_timelimit_seconds):
-         #end recordign via RPi interface
-         os.system('echo ca 0 > /var/www/html/FIFO')
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
-         logger.debug('{}\tVideo capture time limit reached: Start new capture'.format(time_stamp))
-
-         #close the current sensor file and add a short pause for the RPi interface
-         sensor_file.close()
-         sleep(0.25)
-
-         #determine new time stamp, video file name, and create same named sensor data file
-         time_stamp = datetime.datetime.now()+datetime_offset
-         file_name = serial_number + "_" + time_stamp.isoformat("_","milliseconds").replace(':','_').replace('-','_')
-         with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-            print(file_name , end="", file=f)
-         sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
-         print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
-
-         #restart video recording via RPi interace
-         os.system('echo ca 1 > /var/www/html/FIFO')
-         video_started_time = time.time()
-
-
-   #Magnet at Picture Mode
-   if (hall_mode == 3):
-      #When initially entering mode: Disable wifi, flash red led 5 times fast, and buzz
-      if (hall_mode != hall_mode_last):
-
-         #write status to status file
-         with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
-            print("3" , end="", file=f, flush= True)
-
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
-         logger.debug('{}\tPicture Mode activated, 5 flashes'.format(time_stamp))
-
-
-         target_brightness =0.250
-
-         #haptic feedback and led indication
+         #haptic feedback and LED indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
@@ -717,159 +617,44 @@ while True:
          os.system('sudo ifconfig wlan0 down')
          os.system('sudo ifconfig ap@wlan0 down')
 
+   #Magnet at Brightness 2
+   if (hall_mode == 3):
+      #When initially entering mode: Disable wifi, do a long red flash, buzz, and create mission duration sensor data file
+      if (hall_mode != hall_mode_last):
 
-      #If the button is pressed in photo mode, flash the red led, do a short buzz, and take a photo after the led is turned off
-      if (hall_button_active and hall_button_active != hall_button_last):
-
-         #record time in order to time possible photo burst
-         photo_burst_time = time.time()
-         interfaces_time = 0 #this synchronizes interface updates to happen between photos
-
-         #haptic feedback and led indication
-         #red.start(100)
-         if haptic_connected:
-            drv.stop()
-            drv.sequence[0] = adafruit_drv2605.Effect(74)
-            drv.play()
-         else:
-            sleep(0.12)
-         #red.stop()
-
-         #determine time stamp and img file name
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
-         file_name = serial_number + "_" + time_stamp
-         with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-            print(file_name , end="", file=f)
-
-         #capture image via RPi interface
-         os.system('echo im 1 > /var/www/html/FIFO')
-         logger.debug('\n{}\tPhoto capture'.format(time_stamp))
-
-
-         #also create a same named sensor data file and write into it currently available data, and close it right away
-         with open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w') as s:
-
-            print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=s)
-            #GNSS data consdiretarions: Since we update all the peripherals elsewhere anyway, we will write down the last stored sensor data in the img sensor file.
-            #That is great for battery voltage and for the Keller data, but it's maybe not so great for gpss data which isnt always fresh or available.
-            #so if the fix is super recent, write it in the file as per usual. But if the fix is older than 5 seconds, as would be the case in any underwater dive,
-            #we will write the last know location in a special line GNS2: current datetime, fix age in seconds, and coordinates.
-            #So.. if super recent fix, write GNSS
-            if fix_achieved_this_runtime == True:
-               fix_age = time.time() - fix_time_stamp
-               #recent fix, write GNSS
-               if fix_age < 5.0:
-                  print("GNSS:{}\t{}".format(time.monotonic_ns(),gnss_string), file = s )
-               #fix exists but is outdated, write GNS2
-               else:
-                  try:
-                     gnss_string_packed = gnss_string.split("\t")
-                     time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("\t","milliseconds")
-                     print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(),time_stamp.replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
-                  except Exception as e:
-                     logger.debug("@GNS2 PHOTO {}\t{}".format(time_stamp, e))
-            #and write down the BATT and KELL data, easy and that's gonna be current
-            print("BATT:{}\t{}".format(time.monotonic_ns(),batt_string), file = s)
-            print("KELL:{}\t{}".format(time.monotonic_ns(),kell_string), file = s)
-            print("IMUN:{}\t{}".format(time.monotonic_ns(),imu_string), file=s)
-
-
-
-      #If the button is continuing to be pressed, continue to take images
-      elif (hall_button_active and (time.time() - photo_burst_time > 0.49)):
-
-         #record time in order to time capture instance in photo burst
-         photo_burst_time = time.time()
-
-         #haptic feedback with a click. No LED indication in burst
-         if haptic_connected:
-            drv.stop()
-            drv.sequence[0] = adafruit_drv2605.Effect(17) #17 for solid click , 80 for short vib
-            drv.play()
-
-         #determine time stamp and filename.
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
-         file_name = serial_number + "_" + time_stamp
-         with open('/dev/shm/mjpeg/user_annotate.txt', 'w') as f:
-            print(file_name , end="", file=f)
-
-         #capture image vie RPi interface
-         os.system('echo im 1 > /var/www/html/FIFO')
+         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
+         logger.debug('{}\tBrightness 2 activated'.format(time_stamp))
          sys.stdout.flush()
-         logger.debug('*')
 
-         #also create a same named sensor data file and write into it currently available data, and close it right away
-         with open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w') as s:
-            print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file= s)
-            #GNSS data consdiretarions: Since we update all the peripherals elsewhere anyway, we will write down the last stored sensor data in the img sensor file.
-            #That is great for battery voltage and for the Keller data, but it's maybe not so great for gpss data which isnt always fresh or available.
-            #so if the fix is super recent, write it in the file as per usual. But if the fix is older than 5 seconds, as would be the case in any underwater dive,
-            # we will write the last know location in is a special line GNS2: current datetime, fix age in seconds, and corrdinates
-            # so if super recent fix, write GNSS
-            if fix_achieved_this_runtime == True:
-               fix_age = time.time() - fix_time_stamp
-               #recent fix, write GNSS
-               if fix_age < 5.0:
-                  print("GNSS:{}\t{}".format(time.monotonic_ns(), gnss_string), file = s )
-               #fix exists but is outdated, write GNS2
-               else:
-                  try:
-                     gnss_string_packed = gnss_string.split("\t")
-                     time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("\t","milliseconds")
-                     print("GNS2:{}\t{}\t{:.1f}\t{}\t{}".format(time.monotonic_ns(), time_stamp.replace(':','').replace('-',''), fix_age, gnss_string_packed[-2][:], gnss_string_packed[-1][:]), file = s)
-                  except Exception as e:
-                     logger.debug("@GNS2 PHOTO {}\t{}".format(time_stamp, e))
-            #and write down the BATT and KELL data, easy and that's gonna be current
-            print("BATT:{}\t{}".format(time.monotonic_ns(), batt_string), file = s)
-            print("KELL:{}\t{}".format(time.monotonic_ns(), kell_string), file = s)
-            print("IMUN:{}\t{}".format(time.monotonic_ns(),imu_string), file=s)
+         target_brightness = .250
 
+         #haptic feedback and LED indication
+         if haptic_connected:
+            drv.sequence[0] = adafruit_drv2605.Effect(58)
+            drv.play()
 
-      #THere is a bit of a weird bug, that when the photo command is sent to the RPi interfaces too quickly in succesion, which is the case in burst
-      #the RPi interface starts to recod a video as well. Behavior is gone if burst speed is reduced. Very odd, Anyway, to prevent the video to run non stop,
-      #whenever the button get's unpressed, let's send a stop recording command
-      if (hall_button_active==0 and hall_button_active != hall_button_last):
-         os.system('echo ca 0 > /var/www/html/FIFO')
-         logger.debug('End video just in case it was started in burst')
+      #In this mode, if Maka Niu is underwater, diable wifi to save batteries
+      #This way, on land, users can connect to wifi and live stream if desired
+      if (wifi_enabled == True and (fix_is_live == False and approx_depth > 1)):
+         wifi_enabled = False
+         os.system('sudo ifconfig wlan0 down')
+         os.system('sudo ifconfig ap@wlan0 down')
 
-
-
-
-
-
-   #Magnet at Mission 1
+   #Magnet at Brightness 3
    if (hall_mode == 4):
       #When initially entering mode: Disable wifi, do a long red flash, buzz, and create mission duration sensor data file
       if (hall_mode != hall_mode_last):
-         #set flag for mission number
-         in_mission = 1
 
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
-         logger.debug('{}\tMission 1 activated'.format(time_stamp))
+         logger.debug('{}\tBrightness 3 activated'.format(time_stamp))
          sys.stdout.flush()
-
 
          target_brightness = .500
 
-
          #haptic feedback and LED indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
-         #red.start(100)
-         #sleep(0.75)
-         #red.stop()
-
-         #At start of mission, determine time stamp, and create a mission sensor datafile.
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
-         file_name = serial_number + "_" + mission1_name + "_" + time_stamp
-         sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
-         print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
-
-
-         #write status to status file
-         with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
-            print("4 {}.txt".format(file_name) , end="", file=f, flush= True)
 
       #In this mode, if Maka Niu is underwater, diable wifi to save batteries
       #This way, on land, users can connect to wifi and live stream if desired
@@ -878,70 +663,21 @@ while True:
          os.system('sudo ifconfig wlan0 down')
          os.system('sudo ifconfig ap@wlan0 down')
 
-
-
-     #CODE THAT READS FROM THE MISSION FILE AND TAKES ACTION BASED ON THAT.
-     #******************************************************************
-     # whenever photo taken:
-       # name photo file serial number + mission name + datetime
-       # in the sensor data file, write ICAP:datetime \t image_filename
-     #whenever video capture is started:
-       # name video file serial number + mission name + datetime
-       # in the sensor data file, write VCAP:datetime \t video_filename
-     #whenever video capture is stopped:
-       # write to sensor file VSTP:datetime \t video_filename
-     #******************************************************************
-
-      #This executes if the dial was moved away from this mission. Close the sensor file, and terminate video capture.
-      if end_processes_mode_changed_flag:
-         end_processes_mode_changed_flag = 0
-         sensor_file.close()
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
-         logger.debug('{}\tEnding mission 1 by dial'.format(time_stamp))
-         in_mission = 0
-         if recording:
-            os.system('echo ca 0 > /var/www/html/FIFO')
-            logger.debug('{}\tEnding video capture within Mission 1'.format(time_stamp))
-            sys.stdout.flush()
-            recording = 0
-
-
-
-   #Magnet at Mission 2 , flash  red then green twice.
+   #Magnet at Brightness 4
    if (hall_mode == 5):
-      #When initially entering mode: Disable wifi, do two long red led flashes, and buzz
+      #When initially entering mode: Disable wifi, do a long red flash, buzz, and create mission duration sensor data file
       if (hall_mode != hall_mode_last):
-         #set flag for mission number
-         in_mission = 2
 
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
-         logger.debug('{}\tMission 2 activated'.format(time_stamp))
+         logger.debug('{}\tBrightness 4 activated'.format(time_stamp))
          sys.stdout.flush()
 
-         target_brightness = 0.99
-
+         target_brightness = .99
 
          #haptic feedback and LED indication
          if haptic_connected:
             drv.sequence[0] = adafruit_drv2605.Effect(58)
             drv.play()
-         #red.start(100)
-         #sleep(0.75)
-         #red.stop()
-         #sleep(0.5)
-         #red.start(100)
-         #sleep(0.75)
-         #red.stop()
-
-         #At start of mission, determine time stamp, and create a mission sensor datafile.
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
-         file_name = serial_number + "_" + mission2_name + "_" + time_stamp
-         sensor_file = open("/var/www/html/media/{}{}".format(file_name,".txt"), 'w')
-         print("DEID:{}\nMACA:{}".format(serial_number,mac_address), file=sensor_file, flush = True)
-
-         #write status to status file
-         with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
-            print("5 {}.txt".format(file_name) , end="", file=f, flush= True)
 
       #In this mode, if Maka Niu is underwater, diable wifi to save batteries
       #This way, on land, users can connect to wifi and live stream if desired
@@ -949,32 +685,6 @@ while True:
          wifi_enabled = False
          os.system('sudo ifconfig wlan0 down')
          os.system('sudo ifconfig ap@wlan0 down')
-
-
-     #CODE THAT READS A LINE FROM THE MISSION JSON AND TAKEs ACTION BASED ON THAT.
-     #******************************************************************
-     # whenever photo taken:
-       # name photo file serial number + mission name + datetime
-       # in the sensor data file, write ICAP:datetime \t image_filename
-     #whenever video started:
-       # name video file serial number + mission name + datetime
-       # in the sensor data file, write VCAP:datetime \t video_filename
-     #whenever video stopped:
-       # write to sensor file VSTP:datetime \t video_filename
-     #******************************************************************
-
-      #This executes if the dial was moved away from this mission. Close the sensor file, and terminate video capture.
-      if end_processes_mode_changed_flag:
-         end_processes_mode_changed_flag = 0
-         sensor_file.close()
-         time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
-         logger.debug('{}\tEnding mission 2 by dial'.format(time_stamp))
-         in_mission = 0
-         if recording:
-            os.system('echo ca 0 > /var/www/html/FIFO')
-            logger.debug('{}\tEnding video capture within Mission 2'.format(time_stamp))
-            sys.stdout.flush()
-            recording = 0
 
 
    #Magnet at Power Off.
@@ -986,13 +696,6 @@ while True:
       #write status to status file
       with open('/home/pi/git/maka-niu/code/log/status.txt', 'w') as f:
          print("6", end="", file=f, flush= True)
-
-
-      duty_cycle = 0.0
-      light.set_pulse_length_in_fraction(13, duty_cycle)
-      light.update()
-      light.cancel()
-      pi.stop()
 
 
       #Haptic feedback and LED indication
@@ -1010,6 +713,30 @@ while True:
          #red.stop()
          #sleep(0.1)
       #GPIO.cleanup()
+      for x in range(2):
+         duty_cycle = 0.02
+         light.set_pulse_length_in_fraction(13, duty_cycle)
+         light.update()
+         sleep(0.05)
+
+         duty_cycle = 0.0
+         light.set_pulse_length_in_fraction(13, duty_cycle)
+         light.update()
+         sleep(0.1)
+
+         duty_cycle = 0.02
+         light.set_pulse_length_in_fraction(13, duty_cycle)
+         light.update()
+         sleep(0.2)
+
+         duty_cycle = 0.0
+         light.set_pulse_length_in_fraction(13, duty_cycle)
+         light.update()
+         sleep(0.1)
+      light.cancel()
+      pi.stop()
+
+
       call("sudo shutdown -h now", shell=True)
       sys.exit()
 
