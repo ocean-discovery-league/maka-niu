@@ -23,7 +23,7 @@ import re, uuid
 import pigpio
 import wavePWM
 import math
-
+from bluedot.btcomm import BluetoothClient
 
 
 #############################################################SETUP ERROR AND DEBUG LOGGING
@@ -100,6 +100,10 @@ elif hardware_version == 1:
       voltage = ((result[0] <<8 | result[1]) & 0xFFF) * 0.003223
       #: 3.3Vref / 4095(12bit) * (voltage_divider in hardware) = 0.003223
       return voltage
+
+#bluetooth function
+def data_received(data):
+   logger.debug("BLUE:{}\n".format(data))
 
 
 
@@ -260,8 +264,18 @@ elif hardware_version == 1:
       adc_connected = False
 
 
-
-
+#get the name of a potential bluetooth device to pair with
+bt_connected = False
+bt_connected_this_run = False
+bt_device = ""
+if os.path.exists('/home/pi/git/maka-niu/code/log/bluetooth_paired_device.txt'):
+   with open('/home/pi/git/maka-niu/code/log/bluetooth_paired_device.txt', 'r+') as f:
+      try:
+         string = f.readline()
+         bt_device = string.strip()
+         logger.debug('Read blue string is {}'.format(bt_device))
+      except:
+         logger.error("Error reading file")
 
 if battery_volt < 5 or battery_volt > 15:
    logger.debug("ADC not connected, values out of range.")
@@ -701,6 +715,19 @@ while True:
          if haptic_connected:
             drv.stop()
 
+         #when the dial is turned to wifi, attempt to open a bluetooth connection
+         if bt_connected_this_run:
+            bt_connected = bt.connected
+         if bt_device and bt_connected == False:
+               try:
+                  bt = BluetoothClient(bt_device, data_received)
+                  bt_connected_this_run = True
+                  bt_connected =  True
+                  logger.debug('Established bluetooth connection to {}'.format(bt_device))
+               except:
+                  logger.error("Couldnt connect to listed bluetooth device")
+
+
       #in wifi mode, when the button is pressed, flash the green led a number of times based on battery life 1x for low, 2x for mid, 3x for high
       if (hall_button_active != hall_button_last and hall_button_active):
          clickSound()
@@ -761,6 +788,12 @@ while True:
 
          #If not recording, begin recording.
          if (recording == 0):
+
+            #request 5 second of light for videos
+            light_requested_time = time.time()
+            if bt_connected:
+               bt.send("5")
+
             #1st determine time stamp, video file name, and create same named sensor data file
             time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds").replace(':','_').replace('-','_')
             file_name = serial_number + "_" + time_stamp
@@ -796,6 +829,12 @@ while True:
 
          #Or if recording, end recording
          elif (recording):
+
+            #request end of light
+            if bt_connected:
+               bt.send("0")
+
+
             #end recordign via RPi interface
             os.system('echo ca 0 > /var/www/html/FIFO')
             time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
@@ -815,6 +854,11 @@ while True:
 
       #This bit gets executed if the has been moved away from video mode while a recording was active
       if end_processes_mode_changed_flag:
+
+         #request end of light
+         if bt_connected:
+            bt.send("0")
+
          #end recordign via RPi interface
          os.system('echo ca 0 > /var/www/html/FIFO')
          time_stamp = (datetime.datetime.now()+datetime_offset).isoformat("_","milliseconds")
@@ -825,6 +869,17 @@ while True:
          sensor_file.close()
          end_processes_mode_changed_flag = 0
          #there is no LED or haptic feedback in this scenario
+
+
+      #while recording, periodically reqest more light
+      if (recording and bt_connected and (time.time()-light_requested_time) > 2):
+         light_requested_time = time.time()
+         #request light extension
+         if bt_connected:
+            bt.send("5")
+
+
+
 
       #We are limiting video files to fixed max length segments. If the length reaches the timelimit, stop the recording, and start a new one
       if (recording and (time.time()-video_started_time) > video_timelimit_seconds):
@@ -899,6 +954,10 @@ while True:
       #If the button is pressed in photo mode, flash the red led, do a short buzz, and take a photo after the led is turned off
       if (hall_button_active and hall_button_active != hall_button_last):
 
+         #request 1 second of light
+         if bt_connected:
+            bt.send("1")
+
          #record time in order to time possible photo burst
          photo_burst_time = time.time()
          interfaces_time = 0 #this synchronizes interface updates to happen between photos
@@ -958,6 +1017,10 @@ while True:
       #If the button is continuing to be pressed, continue to take images
       elif (hall_button_active and (time.time() - photo_burst_time > 0.49)):
 
+         #request 1 second of light
+         if bt_connected:
+            bt.send("1")
+
          #record time in order to time capture instance in photo burst
          photo_burst_time = time.time()
 
@@ -1012,9 +1075,6 @@ while True:
       if (hall_button_active==0 and hall_button_active != hall_button_last):
          os.system('echo ca 0 > /var/www/html/FIFO')
          logger.debug('End video just in case it was started in burst')
-
-
-
 
 
 
