@@ -715,18 +715,6 @@ while True:
          if haptic_connected:
             drv.stop()
 
-         #when the dial is turned to wifi, attempt to open a bluetooth connection
-         if bt_connected_this_run:
-            bt_connected = bt.connected
-         if bt_device and bt_connected == False:
-               try:
-                  bt = BluetoothClient(bt_device, data_received)
-                  bt_connected_this_run = True
-                  bt_connected =  True
-                  logger.debug('Established bluetooth connection to {}'.format(bt_device))
-               except:
-                  logger.error("Couldnt connect to listed bluetooth device")
-
 
       #in wifi mode, when the button is pressed, flash the green led a number of times based on battery life 1x for low, 2x for mid, 3x for high
       if (hall_button_active != hall_button_last and hall_button_active):
@@ -750,6 +738,22 @@ while True:
             sleep(0.5)
             greenOff()
             sleep(0.2)
+
+         #aftre indicating battery level, attempt to open a bluetooth connection
+         if bt_connected_this_run:
+            bt_connected = bt.connected
+         if bt_device and bt_connected == False:
+               try:
+                  bt = BluetoothClient(bt_device, data_received)
+                  bt_connected_this_run = True
+                  bt_connected =  True
+                  #request 1 second of light to indicatite succes
+                  bt.send("1")
+
+                  logger.debug('Established bluetooth connection to {}'.format(bt_device))
+               except:
+                  logger.error("Couldnt connect to listed bluetooth device")
+
 
 
 
