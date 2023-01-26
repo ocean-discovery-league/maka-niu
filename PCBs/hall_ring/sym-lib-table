@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name Hall_ring-rescue)(type Legacy)(uri ${KIPRJMOD}/Hall_ring-rescue.lib)(options "")(descr ""))
-)

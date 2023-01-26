@@ -1,5 +1,0 @@
-(sym_lib_table
-  (lib (name Maka_BMS-rescue)(type Legacy)(uri ${KIPRJMOD}/Maka_BMS-rescue.lib)(options "")(descr ""))
-  (lib (name Custom)(type Legacy)(uri C:/Users/Luffy/git/maka-niu/PCBs/battery_manager_V2/Custom.lib)(options "")(descr ""))
-  (lib (name CSD25404Q3T)(type Legacy)(uri ${KIPRJMOD}/CSD25404Q3T.lib)(options "")(descr ""))
-)
