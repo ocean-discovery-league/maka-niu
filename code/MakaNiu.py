@@ -177,23 +177,23 @@ elif hardware_version ==1:
       buzzer.update()
       sleep(0.05)
       buzzer.set_pulse_start_and_length_in_micros(13,0,0)
-      buzzer.update()
+#      buzzer.update()
 
    def clickSound():
       buzzer.set_frequency(buz_start_freq)
       half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
       buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
-      buzzer.update()
+#      buzzer.update()
 
       sleep(0.05)
       buzzer.set_frequency(buz_end_freq)
       half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
       buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
-      buzzer.update()
+#      buzzer.update()
 
       sleep(0.05)
       buzzer.set_pulse_start_and_length_in_micros(13,0,0)
-      buzzer.update()
+#      buzzer.update()
 
    def buzFadeOn():
       for x in range(-10, 10, 1):
@@ -202,7 +202,7 @@ elif hardware_version ==1:
          buzzer.set_frequency(freq)
          half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
          buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
-         buzzer.update()
+#         buzzer.update()
 
    def buzFadeOff():
       for x in range(10, -10, -1):
@@ -211,20 +211,20 @@ elif hardware_version ==1:
          buzzer.set_frequency(freq)
          half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
          buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
-         buzzer.update()
+#         buzzer.update()
       buzzer.set_pulse_start_and_length_in_micros(13,0,0)
-      buzzer.update()
+#      buzzer.update()
 
 
    def buzOn():
       buzzer.set_frequency(buz_end_freq)
       half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
       buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
-      buzzer.update()
+#      buzzer.update()
 
    def buzOff():
       buzzer.set_pulse_start_and_length_in_micros(13,0,0)
-      buzzer.update()
+#      buzzer.update()
 
 else:
    logger.error("Error, no hardware version has beeb defined")
