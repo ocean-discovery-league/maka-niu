@@ -160,70 +160,70 @@ elif hardware_version ==1:
    GPIO.setup(12, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) #buzzer low side, also physically wired to ground
 
    #setup pigpiod
-   call("sudo pigpiod", shell=True)
+#   call("sudo pigpiod", shell=True)
    sleep(0.5)
-   pi = pigpio.pi()
-   buzzer = wavePWM.PWM(pi)
+#   pi = pigpio.pi()
+#   buzzer = wavePWM.PWM(pi)
    buz_volume = 1.0 #this is pulse width out of 1, so not at all the same as dB now really a 0to1 sound bar
    buz_start_freq = 1000
    buz_end_freq = 2000
    sweep =  buz_end_freq - buz_start_freq
 
 
-   def clickSoundSingle():
-      buzzer.set_frequency(buz_start_freq)
-      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
-      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
-      buzzer.update()
-      sleep(0.05)
-      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
+   def clickSoundSingle(): pass
+#      buzzer.set_frequency(buz_start_freq)
+#      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
+#      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+#      buzzer.update()
+#      sleep(0.05)
+#      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
 #      buzzer.update()
 
-   def clickSound():
-      buzzer.set_frequency(buz_start_freq)
-      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
-      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+   def clickSound(): pass
+#      buzzer.set_frequency(buz_start_freq)
+#      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
+#      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
 #      buzzer.update()
 
-      sleep(0.05)
-      buzzer.set_frequency(buz_end_freq)
-      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
-      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+#      sleep(0.05)
+#      buzzer.set_frequency(buz_end_freq)
+#      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
+#      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
 #      buzzer.update()
 
-      sleep(0.05)
-      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
+#      sleep(0.05)
+#      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
 #      buzzer.update()
 
-   def buzFadeOn():
-      for x in range(-10, 10, 1):
-         sigmund_f = 1/(1+math.exp(-x/2))
-         freq = buz_start_freq + sigmund_f*sweep
-         buzzer.set_frequency(freq)
-         half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
-         buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+   def buzFadeOn(): sleep(0.325)
+#      for x in range(-10, 10, 1):
+#         sigmund_f = 1/(1+math.exp(-x/2))
+#         freq = buz_start_freq + sigmund_f*sweep
+#         buzzer.set_frequency(freq)
+#         half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
+#         buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
 #         buzzer.update()
 
-   def buzFadeOff():
-      for x in range(10, -10, -1):
-         sigmund_f = 1/(1+math.exp(-x/2))
-         freq = buz_start_freq + sigmund_f*sweep
-         buzzer.set_frequency(freq)
-         half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
-         buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+   def buzFadeOff(): sleep(0.325)
+#      for x in range(10, -10, -1):
+#         sigmund_f = 1/(1+math.exp(-x/2))
+#         freq = buz_start_freq + sigmund_f*sweep
+#         buzzer.set_frequency(freq)
+#         half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
+#         buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
 #         buzzer.update()
-      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
+#      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
 #      buzzer.update()
 
 
-   def buzOn():
-      buzzer.set_frequency(buz_end_freq)
-      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
-      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
+   def buzOn(): pass
+#      buzzer.set_frequency(buz_end_freq)
+#      half_cycle_width = buzzer.get_cycle_length()/2*buz_volume
+#      buzzer.set_pulse_start_and_length_in_micros(13,half_cycle_width,half_cycle_width)
 #      buzzer.update()
 
-   def buzOff():
-      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
+   def buzOff(): pass
+#      buzzer.set_pulse_start_and_length_in_micros(13,0,0)
 #      buzzer.update()
 
 else:
