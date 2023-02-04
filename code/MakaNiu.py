@@ -312,15 +312,17 @@ if battery_volt < 9.0:
 #setup i2c for haptic feedback
 #If there is a hardware issue, flag it and do not use the feature anymore this runtime.
 i2c = busio.I2C(board.SCL, board.SDA)
-haptic_connected = True
-try:
-   drv = adafruit_drv2605.DRV2605(i2c)
-   drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solid buzz
-   drv.play()
-   logger.debug("Haptic feedback device connected")
-except:
-   logger.error("Haptic feedback not connected. Exception")
-   haptic_connected = False
+#haptic_connected = True
+haptic_connected = False
+
+#try:
+#   drv = adafruit_drv2605.DRV2605(i2c)
+#   drv.sequence[0] = adafruit_drv2605.Effect(58) #58 is solid buzz
+#   drv.play()
+#   logger.debug("Haptic feedback device connected")
+#except:
+#   logger.error("Haptic feedback not connected. Exception")
+#   haptic_connected = False
 buzOn()
 sleep(0.5)
 buzOff()
